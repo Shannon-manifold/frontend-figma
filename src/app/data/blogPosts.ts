@@ -1,5 +1,5 @@
 export interface BlogPost {
-  id: string;
+  id: number;
   title: string;
   excerpt: string;
   author: string;
@@ -12,7 +12,7 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
-    id: "lean4-formal-proof",
+    id: 1,
     title: "Lean 4로 시작하는 형식 증명",
     excerpt: "현대 수학의 엄밀성을 컴퓨터로 검증하는 새로운 시대가 열렸습니다.",
     author: "김수학", date: "2026-05-01", readTime: "8분", category: "튜토리얼",
@@ -57,7 +57,7 @@ theorem add_comm (n m : Nat) : n + m = m + n := by
 Lean 4를 설치하고 첫 프로젝트를 만들어보세요. ShannonManifold 커뮤니티에서 다른 기여자들과 함께 배울 수 있습니다.`
   },
   {
-    id: "proof-assistants-future",
+    id: 2,
     title: "증명 보조기가 바꾸는 수학의 미래",
     excerpt: "인간과 기계의 협업으로 수학적 진리를 탐구합니다.",
     author: "박증명", date: "2026-04-29", readTime: "12분", category: "인사이트",
@@ -87,7 +87,7 @@ Lean 4 기반의 Mathlib은 현재 100만 줄 이상의 형식화된 수학을 �
 ShannonManifold와 같은 커뮤니티 플랫폼은 형식 증명의 대중화에 핵심적인 역할을 합니다. 개인 연구자가 혼자 할 수 없는 대규모 형식화 프로젝트를 협업으로 완성할 수 있습니다.`
   },
   {
-    id: "coq-vs-lean",
+    id: 3,
     title: "Coq vs Lean: 어떤 증명 보조기를 선택할까?",
     excerpt: "각 증명 보조기의 특징과 장단점을 비교 분석합니다.",
     author: "이정리", date: "2026-04-27", readTime: "10분", category: "비교 분석",
@@ -130,7 +130,7 @@ ShannonManifold와 같은 커뮤니티 플랫폼은 형식 증명의 대중화�
 수학 연구 목적이라면 Lean 4 + Mathlib을, 소프트웨어 검증 목적이라면 Coq를 추천합니다.`
   },
   {
-    id: "fermat-computer-verification",
+    id: 4,
     title: "페르마의 마지막 정리, 컴퓨터로 검증하다",
     excerpt: "350년간 미해결이었던 난제가 어떻게 형식 증명으로 재탄생했는지 그 여정을 따라갑니다.",
     author: "정해석", date: "2026-04-25", readTime: "15분", category: "케이스 스터디",
@@ -161,14 +161,14 @@ ShannonManifold와 같은 커뮤니티 플랫폼은 형식 증명의 대중화�
 FLT 형식화 프로젝트에 참여하고 싶다면, ShannonManifold의 정수론 채널에서 진행 상황을 확인할 수 있습니다.`
   },
   {
-    id: "proofhub-community-growth",
-    title: "커뮤니티와 함께 성장하는 ProofHub",
-    excerpt: "지난 1년간 ProofHub 커뮤니티의 성장 과정과 앞으로의 비전을 공유합니다.",
+    id: 5,
+    title: "커뮤니티와 함께 성장하는 ShannonManifold",
+    excerpt: "지난 1년간 ShannonManifold 커뮤니티의 성장 과정과 앞으로의 비전을 공유합니다.",
     author: "최알고", date: "2026-04-22", readTime: "6분", category: "커뮤니티",
     image: "https://images.unsplash.com/photo-1758270705317-3ef6142d306f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHw1fHxjb21tdW5pdHklMjBjb2xsYWJvcmF0aW9uJTIwcGVvcGxlfGVufDF8fHx8MTc3NzUxNzMwNXww&ixlib=rb-4.1.0&q=80&w=1080",
     content: `## 1년의 성장
 
-ProofHub(ShannonManifold)은 출범 1년 만에 놀라운 성장을 이루었습니다.
+ShannonManifold은 출범 1년 만에 놀라운 성장을 이루었습니다.
 
 ### 주요 지표
 - **기여자**: 12명 → 892명
@@ -190,7 +190,7 @@ ProofHub(ShannonManifold)은 출범 1년 만에 놀라운 성장을 이루었습
 - **국제 협업**: 전 세계 대학 및 연구소와의 파트너십`
   },
   {
-    id: "isabelle-hol-guide",
+    id: 6,
     title: "Isabelle/HOL 입문 가이드",
     excerpt: "HOL 기반의 강력한 증명 보조기 Isabelle을 처음 시작하는 분들을 위한 완벽 가이드입니다.",
     author: "강기하", date: "2026-04-20", readTime: "11분", category: "튜토리얼",
@@ -234,6 +234,6 @@ end
   },
 ];
 
-export function getBlogPostById(id: string): BlogPost | undefined {
+export function getBlogPostById(id: number): BlogPost | undefined {
   return blogPosts.find((p) => p.id === id);
 }

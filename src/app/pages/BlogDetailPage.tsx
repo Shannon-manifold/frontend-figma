@@ -50,7 +50,7 @@ function renderMarkdown(md: string): string {
 
 export function BlogDetailPage() {
   const { blogId } = useParams();
-  const post = getBlogPostById(blogId || "");
+  const post = getBlogPostById(Number(blogId));
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 

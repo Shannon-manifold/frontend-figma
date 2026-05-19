@@ -181,7 +181,7 @@ const sampleComments = [
 
 export function ProofDetailPage() {
   const { proofId } = useParams();
-  const proof = getProofById(proofId || "");
+  const proof = getProofById(Number(proofId));
   const contentRef = useRef<HTMLDivElement>(null);
   const [showCode, setShowCode] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -246,11 +246,10 @@ export function ProofDetailPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setBookmarked(!bookmarked)}
-              className={`p-2 rounded-lg transition-colors ${
-                bookmarked
+              className={`p-2 rounded-lg transition-colors ${bookmarked
                   ? "text-indigo-600 bg-indigo-50"
                   : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <Bookmark
                 className="w-4 h-4"
@@ -366,7 +365,7 @@ export function ProofDetailPage() {
             </motion.div>
 
             {/* Lean/Coq Code */}
-            {proof.leanCode && (
+            {proof.code && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -397,7 +396,7 @@ export function ProofDetailPage() {
                     className="border-t border-gray-100"
                   >
                     <pre className="px-6 py-5 text-sm font-mono text-gray-200 bg-gray-900 overflow-x-auto leading-relaxed">
-                      {proof.leanCode}
+                      {proof.code}
                     </pre>
                   </motion.div>
                 )}
@@ -490,11 +489,10 @@ export function ProofDetailPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setLiked(!liked)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
-                    liked
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-colors ${liked
                       ? "border-red-200 bg-red-50 text-red-600"
                       : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <Heart
                     className="w-4 h-4"

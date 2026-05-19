@@ -8,10 +8,10 @@ export interface TutorialStep {
 }
 
 export interface Tutorial {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  level: "입문" | "중급" | "고급";
+  level: "Beginner" | "Intermediate" | "Advanced";
   duration: string;
   lessons: number;
   icon: string;
@@ -24,10 +24,10 @@ export interface Tutorial {
 
 export const tutorials: Tutorial[] = [
   {
-    id: "logic-set-theory",
+    id: 36,
     title: "수리논리 및 집합론",
     description: "명제 논리, 술어 논리, 집합의 기본 개념과 연산을 배우고 Lean으로 증명합니다.",
-    level: "입문", duration: "4주", lessons: 12, icon: "∀",
+    level: "Beginner", duration: "4주", lessons: 12, icon: "∀",
     author: "이정리", updatedAt: "2026-04-15",
     prerequisites: [],
     tags: ["Lean 4", "논리학", "집합론"],
@@ -59,10 +59,10 @@ export const tutorials: Tutorial[] = [
     ],
   },
   {
-    id: "analysis",
+    id: 37,
     title: "해석학",
     description: "실수의 완비성, 수열의 극한, 연속함수, 미분과 적분의 엄밀한 정의를 학습합니다.",
-    level: "중급", duration: "6주", lessons: 18, icon: "∫",
+    level: "Intermediate", duration: "6주", lessons: 18, icon: "∫",
     author: "박증명", updatedAt: "2026-04-20",
     prerequisites: ["logic-set-theory"],
     tags: ["Lean 4", "해석학", "실수"],
@@ -78,10 +78,10 @@ export const tutorials: Tutorial[] = [
     ],
   },
   {
-    id: "linear-algebra",
+    id: 38,
     title: "선형대수학",
     description: "벡터 공간, 선형 변환, 고유값과 고유벡터를 형식적으로 증명하는 방법을 배웁니다.",
-    level: "중급", duration: "5주", lessons: 15, icon: "⊕",
+    level: "Intermediate", duration: "5주", lessons: 15, icon: "⊕",
     author: "김수학", updatedAt: "2026-04-10",
     prerequisites: ["logic-set-theory"],
     tags: ["Lean 4", "선형대수", "벡터 공간"],
@@ -97,10 +97,10 @@ export const tutorials: Tutorial[] = [
     ],
   },
   {
-    id: "topology",
+    id: 39,
     title: "위상수학",
     description: "위상 공간, 연속성, 컴팩트성, 연결성 등 위상수학의 기초 개념을 증명 보조기로 탐구합니다.",
-    level: "고급", duration: "8주", lessons: 24, icon: "∞",
+    level: "Advanced", duration: "8주", lessons: 24, icon: "∞",
     author: "정해석", updatedAt: "2026-04-05",
     prerequisites: ["analysis"],
     tags: ["Lean 4", "위상수학", "연속성"],
@@ -116,10 +116,10 @@ export const tutorials: Tutorial[] = [
     ],
   },
   {
-    id: "algebra",
+    id: 40,
     title: "추상대수학",
     description: "군, 환, 체의 구조와 성질을 형식적으로 정의하고 증명하는 과정을 학습합니다.",
-    level: "고급", duration: "7주", lessons: 21, icon: "⊗",
+    level: "Advanced", duration: "7주", lessons: 21, icon: "⊗",
     author: "최알고", updatedAt: "2026-03-28",
     prerequisites: ["linear-algebra"],
     tags: ["Lean 4", "군론", "환론"],
@@ -135,10 +135,10 @@ export const tutorials: Tutorial[] = [
     ],
   },
   {
-    id: "number-theory",
+    id: 41,
     title: "정수론",
     description: "소수, 합동, 디오판토스 방정식 등 정수의 성질을 컴퓨터로 검증하며 배웁니다.",
-    level: "중급", duration: "5주", lessons: 15, icon: "ℤ",
+    level: "Intermediate", duration: "5주", lessons: 15, icon: "ℤ",
     author: "김수학", updatedAt: "2026-04-12",
     prerequisites: ["logic-set-theory"],
     tags: ["Lean 4", "정수론", "소수"],
@@ -155,6 +155,6 @@ export const tutorials: Tutorial[] = [
   },
 ];
 
-export function getTutorialById(id: string): Tutorial | undefined {
+export function getTutorialById(id: number): Tutorial | undefined {
   return tutorials.find((t) => t.id === id);
 }

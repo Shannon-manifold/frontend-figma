@@ -1,5 +1,5 @@
 export interface Challenge {
-  id: string;
+  id: number;
   title: string;
   field: string;
   description: string;
@@ -19,7 +19,7 @@ export interface Challenge {
 
 export const challenges: Challenge[] = [
   {
-    id: "riemann-hypothesis",
+    id: 7,
     title: "리만 가설",
     field: "해석적 정수론",
     description: "리만 제타 함수의 비자명한 영점이 모두 실수부 1/2 위에 놓인다는 난제입니다.",
@@ -39,7 +39,7 @@ export const challenges: Challenge[] = [
     ],
   },
   {
-    id: "p-vs-np",
+    id: 8,
     title: "P 대 NP 문제",
     field: "계산 복잡도 이론",
     description: "빠르게 검증할 수 있는 모든 문제가 빠르게 풀릴 수도 있는지 묻는 컴퓨터 과학의 핵심 난제입니다.",
@@ -59,7 +59,7 @@ export const challenges: Challenge[] = [
     ],
   },
   {
-    id: "bsd-conjecture",
+    id: 9,
     title: "버치-스위너턴다이어 추측",
     field: "대수기하 · 정수론",
     description: "타원곡선의 유리점 구조와 L-함수의 영점 차수가 깊게 연결되어 있다는 추측입니다.",
@@ -79,7 +79,7 @@ export const challenges: Challenge[] = [
     ],
   },
   {
-    id: "hodge-conjecture",
+    id: 10,
     title: "호지 추측",
     field: "대수기하",
     description: "복소 대수다양체의 특정 코호몰로지 클래스가 대수적 순환으로 표현되는지 묻습니다.",
@@ -99,7 +99,7 @@ export const challenges: Challenge[] = [
     ],
   },
   {
-    id: "navier-stokes",
+    id: 11,
     title: "나비에-스토크스 존재성과 매끄러움",
     field: "편미분방정식",
     description: "3차원 비압축성 유체 방정식의 해가 항상 존재하고 매끄러운지 밝히는 문제입니다.",
@@ -119,7 +119,7 @@ export const challenges: Challenge[] = [
     ],
   },
   {
-    id: "yang-mills",
+    id: 12,
     title: "양-밀스 질량 간극",
     field: "수리물리",
     description: "양-밀스 이론의 엄밀한 구성과 양의 질량 간극 존재를 증명하는 문제입니다.",
@@ -140,6 +140,6 @@ export const challenges: Challenge[] = [
   },
 ];
 
-export function getChallengeById(id: string): Challenge | undefined {
+export function getChallengeById(id: number): Challenge | undefined {
   return challenges.find((c) => c.id === id);
 }

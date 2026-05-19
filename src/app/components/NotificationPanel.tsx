@@ -27,7 +27,7 @@ const ICON = {
   challenge:{ icon: Trophy, bg: 'bg-amber-100', color: 'text-amber-600' },
 };
 
-export function NotificationPanel({ isChallengePage }: { isChallengePage: boolean }) {
+export function NotificationPanel() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(INITIAL);
   const ref = useRef<HTMLDivElement>(null);
@@ -52,11 +52,7 @@ export function NotificationPanel({ isChallengePage }: { isChallengePage: boolea
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen((v) => !v)}
-        className={`relative p-2 rounded transition-colors ${
-          isChallengePage
-            ? 'text-neutral-400 hover:text-amber-200'
-            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-        }`}
+        className="relative p-2 rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
       >
         <Bell className="w-4 h-4" />
         <AnimatePresence>

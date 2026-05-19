@@ -11,7 +11,7 @@ const activityIcons: Record<string, typeof CheckCircle> = {
 
 export function ContributorDetailPage() {
   const { contributorId } = useParams();
-  const contributor = getContributorById(contributorId || "");
+  const contributor = getContributorById(Number(contributorId));
 
   useEffect(() => { window.scrollTo(0, 0); }, [contributorId]);
 

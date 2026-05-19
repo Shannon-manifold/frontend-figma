@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, User, CheckCircle, ChevronUp, Share2, Bookmark, Tag } from "lucide-react";
+import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag } from "lucide-react";
 import { getQuestionById } from "../data/questions";
 import { useEffect, useState } from "react";
 
@@ -24,7 +24,7 @@ function renderContent(text: string): string {
 
 export function QnADetailPage() {
   const { questionId } = useParams();
-  const question = getQuestionById(questionId || "");
+  const question = getQuestionById(Number(questionId));
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 

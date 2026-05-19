@@ -1,5 +1,5 @@
 export interface Proof {
-  id: string;
+  id: number;
   title: string;
   description: string;
   status: 'verified' | 'pending' | 'failed';
@@ -10,12 +10,12 @@ export interface Proof {
   date: string;
   field: string;
   latex: string;
-  leanCode?: string;
+  code?: string;
 }
 
 export const proofs: Proof[] = [
   {
-    id: "fermat-last-n3",
+    id: 19,
     title: "페르마의 마지막 정리 (n=3)",
     description: "n이 3일 때 x³ + y³ = z³을 만족하는 양의 정수 해가 존재하지 않음을 증명",
     status: "verified",
@@ -25,7 +25,7 @@ export const proofs: Proof[] = [
     comments: 32,
     date: "2026-04-28",
     field: "정수론",
-    leanCode: `theorem fermat_last_n3 :
+    code: `theorem fermat_last_n3 :
   ∀ x y z : ℕ, x > 0 → y > 0 → z > 0 →
     x ^ 3 + y ^ 3 ≠ z ^ 3 := by
   intro x y z hx hy hz
@@ -63,7 +63,7 @@ $$x + y = \\alpha^3, \\quad x + \\omega y = \\beta^3, \\quad x + \\omega^2 y = \
 \\end{proof}`
   },
   {
-    id: "riemann-zeta-functional",
+    id: 20,
     title: "리만 제타 함수의 함수방정식",
     description: "리만 제타 함수 ζ(s)가 만족하는 함수방정식을 형식적으로 증명",
     status: "verified",
@@ -102,7 +102,7 @@ $$\\xi(s) = \\pi^{-s/2} \\Gamma\\!\\left(\\frac{s}{2}\\right) \\zeta(s) = \\frac
 \\end{proof}`
   },
   {
-    id: "associativity-arithmetic",
+    id: 21,
     title: "사칙연산의 결합법칙",
     description: "자연수 집합에서 덧셈과 곱셈의 결합법칙을 귀납법으로 증명",
     status: "verified",
@@ -139,7 +139,7 @@ $(a + b) + c = a + (b + c)$가 성립한다고 가정하자 (귀납 가설).
 \\end{proof}`
   },
   {
-    id: "goldbach-small-case",
+    id: 22,
     title: "골드바흐의 추측 (작은 케이스)",
     description: "10^8 이하의 모든 짝수는 두 소수의 합으로 표현됨을 컴퓨터 검증",
     status: "pending",
@@ -176,7 +176,7 @@ $(a + b) + c = a + (b + c)$가 성립한다고 가정하자 (귀납 가설).
 \\end{proof}`
   },
   {
-    id: "fundamental-calculus",
+    id: 23,
     title: "미적분학의 기본정리",
     description: "연속함수의 적분과 미분이 서로 역연산임을 증명",
     status: "verified",
@@ -213,7 +213,7 @@ $|h| < \\delta$일 때:
 \\end{proof}`
   },
   {
-    id: "pythagorean-generalization",
+    id: 24,
     title: "피타고라스 정리 일반화",
     description: "n차원 공간에서의 피타고라스 정리 확장 증명",
     status: "failed",
@@ -244,7 +244,7 @@ $$\\sum_{i=1}^k \\sum_{j=1}^k \\langle v_i, v_j \\rangle = \\sum_{i=1}^k \\langl
 \\end{proof}`
   },
   {
-    id: "euclidean-algorithm",
+    id: 25,
     title: "유클리드 호제법의 정당성",
     description: "최대공약수를 구하는 유클리드 알고리즘의 정확성 증명",
     status: "verified",
@@ -276,7 +276,7 @@ $d \\mid \\gcd(b,r)$이고 $\\gcd(b,r) \\mid d$이므로 $\\gcd(a,b) = \\gcd(b, 
 \\end{proof}`
   },
   {
-    id: "bernoulli-numbers",
+    id: 26,
     title: "베르누이 수의 재귀 정의",
     description: "베르누이 수를 재귀적으로 정의하고 주요 성질 증명",
     status: "verified",
@@ -307,7 +307,7 @@ $$1 + 3\\left(-\\frac{1}{2}\\right) + 3B_2 = 0 \\implies B_2 = \\frac{1}{6}$$
 \\end{proof}`
   },
   {
-    id: "stirling-approximation",
+    id: 27,
     title: "스털링 공식의 점근 전개",
     description: "계승 함수의 점근적 행동을 스털링 공식으로 근사",
     status: "pending",
@@ -344,6 +344,6 @@ $$\\int_{-\\infty}^{\\infty} e^{-u^2/2}\\, du = \\sqrt{2\\pi}$$
   }
 ];
 
-export function getProofById(id: string): Proof | undefined {
+export function getProofById(id: number): Proof | undefined {
   return proofs.find(p => p.id === id);
 }

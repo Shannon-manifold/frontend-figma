@@ -28,7 +28,7 @@ export function ChallengesPage() {
       progress: 74,
       difficulty: "Millennium",
       proofSystem: "Lean 4",
-      accent: "from-amber-300 to-yellow-500",
+      accent: "from-indigo-400 to-blue-600",
     },
     {
       title: "P 대 NP 문제",
@@ -41,7 +41,7 @@ export function ChallengesPage() {
       progress: 68,
       difficulty: "Millennium",
       proofSystem: "Coq",
-      accent: "from-emerald-300 to-teal-500",
+      accent: "from-emerald-400 to-teal-600",
     },
     {
       title: "버치-스위너턴다이어 추측",
@@ -54,7 +54,7 @@ export function ChallengesPage() {
       progress: 53,
       difficulty: "Millennium",
       proofSystem: "Isabelle",
-      accent: "from-cyan-300 to-blue-500",
+      accent: "from-cyan-400 to-sky-600",
     },
     {
       title: "호지 추측",
@@ -67,7 +67,7 @@ export function ChallengesPage() {
       progress: 42,
       difficulty: "Millennium",
       proofSystem: "Lean 4",
-      accent: "from-fuchsia-300 to-rose-500",
+      accent: "from-fuchsia-400 to-rose-600",
     },
     {
       title: "나비에-스토크스 존재성과 매끄러움",
@@ -80,7 +80,7 @@ export function ChallengesPage() {
       progress: 39,
       difficulty: "Millennium",
       proofSystem: "Agda",
-      accent: "from-orange-300 to-red-500",
+      accent: "from-orange-400 to-red-600",
     },
     {
       title: "양-밀스 질량 간극",
@@ -93,48 +93,32 @@ export function ChallengesPage() {
       progress: 36,
       difficulty: "Millennium",
       proofSystem: "Lean 4",
-      accent: "from-violet-300 to-indigo-500",
+      accent: "from-violet-400 to-purple-600",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white overflow-hidden">
-      <section className="relative border-b border-white/10">
-        <motion.div
-          aria-hidden="true"
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "linear-gradient(135deg, #050505 0%, #111827 42%, #3f2f12 100%)",
-              "linear-gradient(135deg, #050505 0%, #11201b 48%, #2d2147 100%)",
-              "linear-gradient(135deg, #050505 0%, #18181b 46%, #123233 100%)",
-              "linear-gradient(135deg, #050505 0%, #111827 42%, #3f2f12 100%)",
-            ],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.05),rgba(0,0,0,0.72))]" />
-        <div className="absolute inset-0 opacity-[0.08] bg-[linear-gradient(90deg,transparent_0,transparent_95%,rgba(255,255,255,0.8)_100%),linear-gradient(0deg,transparent_0,transparent_95%,rgba(255,255,255,0.7)_100%)] bg-[length:48px_48px]" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div className="min-h-screen bg-white text-gray-900">
+      <section className="relative border-b border-gray-100 bg-gray-50/50">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
             className="max-w-4xl"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-300/30 text-amber-200 text-sm font-semibold mb-8">
-              <Sparkles className="w-4 h-4" />
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-6">
+              <Sparkles className="w-3.5 h-3.5" />
               OPEN PROBLEMS
             </span>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-gray-900">
               아직 이름 붙지 않은
               <br />
-              세계의 경계로
+              <span className="text-indigo-600">세계의 경계로</span>
             </h1>
 
-            <p className="text-xl text-neutral-300 leading-relaxed max-w-3xl mb-10">
+            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mb-10">
               인류가 아직 풀지 못한 난제를 형식 증명 커뮤니티와 함께 추적합니다.
               후원금은 검증 가능한 해결에 도달한 기여자에게 상금으로 지급됩니다.
             </p>
@@ -147,11 +131,11 @@ export function ChallengesPage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="border border-white/10 bg-white/[0.06] backdrop-blur-sm rounded-lg p-5"
+                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
                 >
-                  <item.icon className="w-5 h-5 text-amber-300 mb-3" />
-                  <div className="text-2xl font-bold">{item.value}</div>
-                  <div className="text-sm text-neutral-400">{item.label}</div>
+                  <item.icon className="w-5 h-5 text-indigo-500 mb-3" />
+                  <div className="text-2xl font-bold text-gray-900">{item.value}</div>
+                  <div className="text-sm text-gray-500">{item.label}</div>
                 </div>
               ))}
             </div>
@@ -159,81 +143,91 @@ export function ChallengesPage() {
         </div>
       </section>
 
-      <section className="relative border-y border-amber-300/15 bg-[linear-gradient(180deg,#050505_0%,#130f08_48%,#050505_100%)] py-20">
-        <div className="absolute inset-0 opacity-[0.09] bg-[linear-gradient(120deg,rgba(251,191,36,0.32),transparent_28%,transparent_72%,rgba(250,204,21,0.24))]" />
+      <section className="relative py-20 bg-white">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -28 }}
+              initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.6 }}
               className="flex justify-center lg:justify-start"
             >
-              <div className="relative w-full max-w-lg">
-                <div className="relative rounded-[1.75rem] bg-[linear-gradient(135deg,#f8e7ac_0%,#b8892e_28%,#332414_48%,#d8b45a_72%,#7a5520_100%)] p-[10px] shadow-[0_28px_80px_rgba(0,0,0,0.55),0_0_42px_rgba(251,191,36,0.18)]">
-                  <div className="rounded-[1.35rem] bg-neutral-950 p-2">
-                    <div className="rounded-[1.1rem] border border-amber-200/45 bg-[linear-gradient(135deg,#1c170d,#050505)] p-2">
-                      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-black/70 bg-black">
-                        <ImageWithFallback
-                          src={wilesPortraitUrl}
-                          alt="Andrew Wiles"
-                          className="w-full h-full object-contain"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-amber-100/10" />
+              <div className="relative w-fit max-w-full group mx-auto lg:mx-0">
+                {/* Outer sophisticated frame */}
+                <div className="relative rounded-[2rem] p-4 bg-gradient-to-br from-slate-800 via-slate-900 to-black shadow-[20px_20px_60px_rgba(0,0,0,0.3),-5px_-5px_20px_rgba(255,255,255,0.05)] overflow-hidden">
+                  {/* Subtle inner metallic glow */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-transparent to-amber-500/10 opacity-50" />
+                  
+                  {/* The 'Mat' (white border inside the frame) */}
+                  <div className="relative rounded-2xl bg-white p-8 shadow-inner">
+                    {/* Inner gold/silver thin border */}
+                    <div className="absolute inset-[30px] border border-amber-200/30 rounded-lg pointer-events-none" />
+                    
+                    {/* The Image container */}
+                    <div className="relative overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-200 shadow-2xl">
+                      <ImageWithFallback
+                        src={wilesPortraitUrl}
+                        alt="Andrew Wiles"
+                        className="max-w-[400px] h-auto object-contain grayscale-[0.2] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
+                      />
+                      {/* Glass effect overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+                    </div>
+                    
+                    {/* Plaque-like detail */}
+                    <div className="mt-6 flex flex-col items-center">
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent via-amber-200 to-transparent mb-2" />
+                      <div className="text-[10px] tracking-[0.2em] text-amber-600/60 font-serif uppercase">
+                        Oxford, United Kingdom
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-amber-200/80 rounded-tl-lg" />
-                <div className="absolute -top-3 -right-3 w-8 h-8 border-r-2 border-t-2 border-amber-200/80 rounded-tr-lg" />
-                <div className="absolute -bottom-3 -left-3 w-8 h-8 border-l-2 border-b-2 border-amber-200/80 rounded-bl-lg" />
-                <div className="absolute -bottom-3 -right-3 w-8 h-8 border-r-2 border-b-2 border-amber-200/80 rounded-br-lg" />
+                
+                {/* Decorative floating elements */}
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full" />
+                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full" />
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 28 }}
+              initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.12 }}
-              className="rounded-lg border border-amber-300/20 bg-black/35 p-6 sm:p-8 shadow-2xl shadow-black/40"
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="rounded-2xl border border-gray-200 bg-gray-50/50 p-6 sm:p-8"
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-300/10 border border-amber-300/25 text-amber-200 text-sm font-semibold mb-6">
-                <Sparkles className="w-4 h-4" />
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-6">
+                <Sparkles className="w-3.5 h-3.5" />
                 DARK MANSION
               </span>
 
-              <blockquote className="space-y-5 border-l-4 border-amber-300/70 pl-6">
-                <p className="text-xl sm:text-2xl font-semibold leading-relaxed text-amber-50">
-                  페르마의 마지막 정리를 증명했다는 것에 대해서 나 자신은 일종의 슬픔을 느낍니다. 아마 모든 수학자들도 의기소침해졌을 것입니다. 그 문제는 우리 자신들을 끌어들여서 항상 꿈을 갖게 만들면서도, 한편으로는 결코 실현될 수 없는 대상으로 생각하게 만들었기 때문입니다. 지금 나는 무엇인가를 빼앗긴 느낌이 듭니다.
+              <blockquote className="space-y-4 border-l-4 border-indigo-200 pl-6">
+                <p className="text-xl font-semibold leading-relaxed text-gray-900">
+                  페르마의 마지막 정리를 증명했다는 것에 대해서 나 자신은 일종의 슬픔을 느낍니다. 아마 모든 수학자들도 의기소침해졌을 것입니다.
                 </p>
 
-                <p className="text-base sm:text-lg leading-relaxed text-neutral-300">
+                <p className="text-base leading-relaxed text-gray-600">
                   한 사람이 어두운 아파트 안으로 들어갔다고 상상해 봅시다. 칠흑같이 어두운 아파트말입니다. 처음에는 아무것도 보이지 않으니 이리저리 가구에 부딪쳐 넘어지면서 갈피를 잡지 못하겠지요. 하지만 이런 시행착오를 거듭하다보면 어둠 속에서도 가구의 위치들이 점차 머릿속에 그려질 겁니다.
                 </p>
 
-                <p className="text-base sm:text-lg leading-relaxed text-neutral-300">
-                  이런 식으로 6개월을 지낸 뒤에 드디어 그 사람은 전등의 스위치를 발견하고 불을 켭니다. 그러면 모든 것이 일목요연하게 드러나면서 자신이 서있는 위치가 어디쯤이었는지를 정확하게 알게 되겠지요. 그런 뒤에 또 다시 옆집으로 들어갔다고 합시다. 역시 칠흑같이 어두운 집입니다.
-                </p>
-
-                <p className="text-base sm:text-lg leading-relaxed text-neutral-300">
-                  그는 여기서도 6개월의 시간을 보낸 뒤에 전등의 스위치를 발견합니다. 무언가 극적인 발견이 이루어지는 거죠. 이때 느끼는 흥분감은 아주 순간적인 것일 수도 있고, 경우에 따라서는 하루나 이틀 정도 지속되기도 합니다. 어쨌거나 이러한 흥분감은 암흑 속에서 긴 시간을 보낸 경험을 한 사람들만이 느낄 수 있습니다. 그것은 지난 세월에 대한 최고의 보상이지요. 겪어보지 않은 사람들은 아마 잘 모를 겁니다.
+                <p className="text-base leading-relaxed text-gray-600">
+                  이런 식으로 6개월을 지낸 뒤에 드디어 그 사람은 전등의 스위치를 발견하고 불을 켭니다. 그러면 모든 것이 일목요연하게 드러나면서 자신이 서있는 위치가 어디쯤이었는지를 정확하게 알게 되겠지요.
                 </p>
               </blockquote>
 
-              <div className="mt-8 rounded-lg border border-amber-300/15 bg-amber-300/[0.07] p-5">
-                <p className="text-sm leading-relaxed text-amber-100/80">
-                  Perhaps I could best describe my experience of doing mathematics in terms of entering a dark mansion. You go into the first room and it's dark, completely dark. You stumble around, bumping into the furniture. Gradually, you learn where each piece of furniture is. And finally, after six months or so, you find the light switch and turn it on. Suddenly, it's all illuminated and you can see exactly where you were. Then you enter the next dark room.
+              <div className="mt-8 rounded-xl border border-indigo-100 bg-indigo-50/50 p-5">
+                <p className="text-sm italic leading-relaxed text-indigo-900/70">
+                  "Perhaps I could best describe my experience of doing mathematics in terms of entering a dark mansion... finally, after six months or so, you find the light switch and turn it on."
                 </p>
               </div>
 
-              <div className="mt-6 border-t border-amber-300/20 pt-5">
-                <div className="text-lg font-semibold text-amber-100">
+              <div className="mt-6 pt-5 border-t border-gray-200">
+                <div className="text-lg font-bold text-gray-900">
                   앤드류 와일스 경
                 </div>
-                <div className="text-sm text-neutral-400">
+                <div className="text-sm text-gray-500">
                   Sir Andrew John Wiles · 페르마의 마지막 정리 증명자
                 </div>
               </div>
@@ -242,85 +236,83 @@ export function ChallengesPage() {
         </div>
       </section>
 
-      <section className="relative py-16">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#050505_0%,#10100e_45%,#050505_100%)]" />
+      <section className="relative py-20 bg-gray-50/30">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
             <div>
-              <h2 className="text-3xl font-bold mb-3">후원 중인 난제</h2>
-              <p className="text-neutral-400">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">후원 중인 난제</h2>
+              <p className="text-gray-600">
                 각 카드의 후원 풀은 상금으로 적립되며, 검증 절차를 통과한 해결자에게 지급됩니다.
               </p>
             </div>
-            <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-amber-400 text-neutral-950 rounded-lg font-semibold hover:bg-amber-300 transition shadow-lg shadow-amber-500/20">
+            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
               난제 등록하기
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {challenges.map((challenge, index) => (
               <motion.article
                 key={challenge.title}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.06 }}
-                whileHover={{ y: -4 }}
-                className="group relative overflow-hidden rounded-lg border border-white/10 bg-neutral-900/80 p-6 shadow-2xl shadow-black/30"
+                transition={{ delay: index * 0.05 }}
+                className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div
-                  className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${challenge.accent}`}
+                  className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${challenge.accent}`}
                 />
 
-                <div className="flex items-start justify-between gap-4 mb-5">
+                <div className="flex items-start justify-between gap-4 mb-6">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-neutral-200 border border-white/10">
+                      <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-600 border border-gray-200 uppercase tracking-wider">
                         {challenge.difficulty}
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-emerald-400/10 text-xs font-semibold text-emerald-200 border border-emerald-300/20">
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-600 border border-indigo-100 uppercase tracking-wider">
                         {challenge.proofSystem}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold mb-2 group-hover:text-amber-200 transition">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition">
                       {challenge.title}
                     </h3>
-                    <p className="text-sm text-amber-200/80 font-medium">
+                    <p className="text-sm text-indigo-600/80 font-medium">
                       {challenge.field}
                     </p>
                   </div>
 
-                  <div className="w-12 h-12 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <Gem className="w-6 h-6 text-amber-300" />
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                    <Gem className="w-6 h-6 text-indigo-600" />
                   </div>
                 </div>
 
-                <p className="text-neutral-300 leading-relaxed mb-6">
+                <p className="text-gray-600 leading-relaxed mb-8 h-12 line-clamp-2">
                   {challenge.description}
                 </p>
 
-                <div className="rounded-lg border border-white/10 bg-black/30 p-5 mb-5">
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5 mb-6">
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
-                      <div className="text-sm text-neutral-400 mb-1">
+                      <div className="text-xs text-gray-500 mb-1">
                         해결 상금
                       </div>
-                      <div className="text-3xl font-bold text-amber-200">
+                      <div className="text-3xl font-bold text-gray-900">
                         {challenge.prize}
                       </div>
                     </div>
-                    <Trophy className="w-9 h-9 text-amber-300" />
+                    <Trophy className="w-8 h-8 text-indigo-500 opacity-20" />
                   </div>
 
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-neutral-400">후원 풀</span>
-                      <span className="font-semibold text-neutral-100">
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-gray-500 font-medium">후원 풀 적립 현황</span>
+                      <span className="font-bold text-gray-900">
                         {challenge.sponsorPool}
                       </span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
                       <div
                         className={`h-full rounded-full bg-gradient-to-r ${challenge.accent}`}
                         style={{ width: `${challenge.progress}%` }}
@@ -328,21 +320,21 @@ export function ChallengesPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-neutral-400">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
                     <span className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4" />
-                      {challenge.backers.toLocaleString()}명 후원
+                      <Users className="w-3.5 h-3.5" />
+                      {challenge.backers.toLocaleString()}명 참여
                     </span>
-                    <span>{challenge.progress}% 적립</span>
+                    <span className="font-bold text-indigo-600">{challenge.progress}% 완료</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-white text-neutral-950 rounded-lg font-semibold hover:bg-amber-100 transition">
+                  <button className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition">
                     <BadgeDollarSign className="w-4 h-4" />
                     후원하기
                   </button>
-                  <button className="inline-flex items-center justify-center gap-2 px-4 py-3 border border-white/15 text-neutral-100 rounded-lg font-semibold hover:bg-white/10 transition">
+                  <button className="inline-flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition">
                     <ShieldCheck className="w-4 h-4" />
                     검증 조건
                   </button>
@@ -351,12 +343,12 @@ export function ChallengesPage() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-lg border border-amber-300/20 bg-amber-300/10 p-6">
+          <div className="mt-12 rounded-xl border border-indigo-100 bg-indigo-50/30 p-6">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <Clock className="w-8 h-8 text-amber-200 flex-shrink-0" />
-              <p className="text-neutral-200 leading-relaxed">
-                후원 기능은 UI 단계입니다. 결제, 에스크로, 검증 위원회, 상금 지급 조건은
-                이후 실제 서비스 정책과 백엔드 연동에 맞춰 확정할 수 있습니다.
+              <Clock className="w-6 h-6 text-indigo-500 flex-shrink-0" />
+              <p className="text-sm text-indigo-900/70 leading-relaxed">
+                후원 기능은 현재 UI 프로토타입 단계입니다. 실제 결제 및 상금 지급 정책은
+                향후 거버넌스 및 백엔드 연동을 통해 확정될 예정입니다.
               </p>
             </div>
           </div>

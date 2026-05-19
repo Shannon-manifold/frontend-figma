@@ -412,16 +412,14 @@ export function MyPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeTab === tab.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === tab.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <span className="flex items-center gap-1.5">
                 {tab.label}
                 {tab.count !== null && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    activeTab === tab.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
-                  }`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
                     {tab.count}
                   </span>
                 )}
