@@ -1,16 +1,27 @@
 import { motion } from 'motion/react';
-import { BookOpen, Clock, ArrowRight, Zap, Layers, PenLine } from 'lucide-react';
+import { BookOpen, Clock, ArrowRight, Zap, Layers, PenLine, Loader2 } from 'lucide-react';
 import { Link } from 'react-router';
+import { tutorialService } from '../services/tutorialService';
+import { TutorialResponse } from '../services/types';
+import { useState, useEffect } from 'react';
 
 export function TutorialsPage() {
-  const tutorials = [
-    { id: 'logic-set-theory', title: '수리논리 및 집합론', description: '명제 논리, 술어 논리, 집합의 기본 개념과 연산을 배우고 Lean으로 증명합니다.', level: '입문' as const, duration: '4주', lessons: 12, icon: '∀' },
-    { id: 'analysis', title: '해석학', description: '실수의 완비성, 수열의 극한, 연속함수, 미분과 적분의 엄밀한 정의를 학습합니다.', level: '중급' as const, duration: '6주', lessons: 18, icon: '∫' },
-    { id: 'linear-algebra', title: '선형대수학', description: '벡터 공간, 선형 변환, 고유값과 고유벡터를 형식적으로 증명하는 방법을 배웁니다.', level: '중급' as const, duration: '5주', lessons: 15, icon: '⊕' },
-    { id: 'topology', title: '위상수학', description: '위상 공간, 연속성, 컴팩트성, 연결성 등 위상수학의 기초 개념을 증명 보조기로 탐구합니다.', level: '고급' as const, duration: '8주', lessons: 24, icon: '∞' },
-    { id: 'algebra', title: '추상대수학', description: '군, 환, 체의 구조와 성질을 형식적으로 정의하고 증명하는 과정을 학습합니다.', level: '고급' as const, duration: '7주', lessons: 21, icon: '⊗' },
-    { id: 'number-theory', title: '정수론', description: '소수, 합동, 디오판토스 방정식 등 정수의 성질을 컴퓨터로 검증하며 배웁니다.', level: '중급' as const, duration: '5주', lessons: 15, icon: 'ℤ' },
-  ];
+  const [tutorialList, setTutorialList] = useState<TutorialResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTutorials = async () => {
+      try {
+        const data = await tutorialService.getAllTutorials();
+        setTutorialList(data);
+      } catch (error) {
+        console.error('Failed to fetch tutorials:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTutorials();
+  }, []);
 
   const levelStyle = {
     '입문': 'bg-green-50 text-green-700 border-green-200',
@@ -41,52 +52,58 @@ export function TutorialsPage() {
 
       <section className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tutorials.map((tutorial, index) => (
-              <motion.div
-                key={tutorial.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.07 }}
-                whileHover={{ y: -6 }}
-              >
-                <Link to={`/tutorials/${tutorial.id}`}>
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 h-full">
-                    <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
-                      <span className="text-3xl font-serif text-gray-300">{tutorial.icon}</span>
-                      <span className={`px-2.5 py-1 rounded border text-xs font-medium ${levelStyle[tutorial.level]}`}>
-                        {tutorial.level}
-                      </span>
-                    </div>
-
-                    <div className="p-6">
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">{tutorial.title}</h3>
-                      <p className="text-sm text-gray-500 mb-5 line-clamp-3 leading-relaxed">{tutorial.description}</p>
-
-                      <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          <span>{tutorial.lessons}개 레슨</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>{tutorial.duration}</span>
-                        </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tutorialList.map((tutorial, index) => (
+                <motion.div
+                  key={tutorial.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.07 }}
+                  whileHover={{ y: -6 }}
+                >
+                  <Link to={`/tutorials/${tutorial.id}`}>
+                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 h-full">
+                      <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+                        <span className="text-3xl font-serif text-gray-300">{tutorial.icon || 'Σ'}</span>
+                        <span className={`px-2.5 py-1 rounded border text-xs font-medium ${levelStyle[tutorial.level as keyof typeof levelStyle] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                          {tutorial.level}
+                        </span>
                       </div>
 
-                      <motion.div
-                        whileHover={{ x: 4 }}
-                        className="flex items-center gap-1 text-sm text-indigo-600 font-medium"
-                      >
-                        시작하기 <ArrowRight className="w-3.5 h-3.5" />
-                      </motion.div>
+                      <div className="p-6">
+                        <h3 className="text-base font-semibold text-gray-900 mb-2">{tutorial.title}</h3>
+                        <p className="text-sm text-gray-500 mb-5 line-clamp-3 leading-relaxed">{tutorial.description}</p>
+
+                        <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
+                          <div className="flex items-center gap-1">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>{tutorial.lessonsCount}개 레슨</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{tutorial.duration}</span>
+                          </div>
+                        </div>
+
+                        <motion.div
+                          whileHover={{ x: 4 }}
+                          className="flex items-center gap-1 text-sm text-indigo-600 font-medium"
+                        >
+                          시작하기 <ArrowRight className="w-3.5 h-3.5" />
+                        </motion.div>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

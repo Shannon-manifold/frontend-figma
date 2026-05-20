@@ -1,0 +1,31 @@
+import { fetcher } from './api';
+import { ProofResponse, ProofDetailResponse } from './types';
+
+export const proofService = {
+  async getAllProofs(): Promise<ProofResponse[]> {
+    return fetcher<ProofResponse[]>('/api/proofs');
+  },
+
+  async getProofDetail(id: number): Promise<ProofDetailResponse> {
+    return fetcher<ProofDetailResponse>(`/api/proofs/${id}`);
+  },
+
+  async createProof(data: any): Promise<ProofDetailResponse> {
+    return fetcher<ProofDetailResponse>('/api/proofs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async toggleLike(id: number): Promise<ProofDetailResponse> {
+    return fetcher<ProofDetailResponse>(`/api/proofs/${id}/like`, {
+      method: 'POST',
+    });
+  },
+
+  async toggleBookmark(id: number): Promise<string> {
+    return fetcher<string>(`/api/proofs/${id}/bookmarks`, {
+      method: 'POST',
+    });
+  }
+};

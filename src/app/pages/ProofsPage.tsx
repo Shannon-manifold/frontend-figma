@@ -1,10 +1,29 @@
 import { motion } from "motion/react";
 import { TheoremCard } from "../components/TheoremCard";
 import { FilterBar } from "../components/FilterBar";
-import { Search, TrendingUp, Clock, Star } from "lucide-react";
-import { proofs } from "../data/proofs";
+import { Search, TrendingUp, Clock, Star, Loader2 } from "lucide-react";
+import { proofService } from "../services/proofService";
+import { ProofResponse } from "../services/types";
+import { useState, useEffect } from "react";
 
 export function ProofsPage() {
+  const [proofList, setProofList] = useState<ProofResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProofs = async () => {
+      try {
+        const data = await proofService.getAllProofs();
+        setProofList(data);
+      } catch (error) {
+        console.error("Failed to fetch proofs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProofs();
+  }, []);
+
   const stats = [
     { icon: TrendingUp, label: "검증률", value: "87.5%", color: "text-green-700" },
     { icon: Star, label: "인기 정리", value: "1,247", color: "text-yellow-700" },
@@ -70,16 +89,22 @@ export function ProofsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-baseline justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">모든 증명</h2>
-            <span className="text-sm text-gray-500">총 {proofs.length}개</span>
+            <span className="text-sm text-gray-500">총 {proofList.length}개</span>
           </div>
 
           <FilterBar />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-            {proofs.map((theorem) => (
-              <TheoremCard key={theorem.id} {...theorem} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              {proofList.map((theorem) => (
+                <TheoremCard key={theorem.id} {...theorem} />
+              ))}
+            </div>
+          )}
 
           <div className="flex items-center justify-center gap-1 mt-10">
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="px-3 py-1.5 border border-gray-300 text-gray-600 text-sm rounded hover:bg-gray-50 transition-colors">이전</motion.button>

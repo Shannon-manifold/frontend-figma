@@ -1,9 +1,10 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmark, Loader2 } from "lucide-react";
 import { getBlogPostById, blogPosts } from "../data/blogPosts";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { useEffect, useState } from "react";
+import { blogService } from "../services/blogService";
 
 function renderMarkdown(md: string): string {
   let html = md;
@@ -50,11 +51,42 @@ function renderMarkdown(md: string): string {
 
 export function BlogDetailPage() {
   const { blogId } = useParams();
-  const post = getBlogPostById(Number(blogId));
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [blogId]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const data = await blogService.getBlogDetail(Number(blogId));
+        if (data && typeof data === 'object') {
+          setPost(data);
+        } else {
+          // Fallback to mock data if backend returns placeholder string
+          const mockPost = getBlogPostById(Number(blogId));
+          setPost(mockPost);
+        }
+      } catch (error) {
+        console.error('Failed to fetch blog post:', error);
+        const mockPost = getBlogPostById(Number(blogId));
+        setPost(mockPost);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+  }, [blogId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!post) {
     return (

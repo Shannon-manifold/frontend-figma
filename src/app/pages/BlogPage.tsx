@@ -1,13 +1,37 @@
 import { motion } from 'motion/react';
-import { Calendar, Clock, User, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { Link } from 'react-router';
-import { blogPosts } from '../data/blogPosts';
+import { blogService } from '../services/blogService';
+import { useState, useEffect } from 'react';
 
 const weierstrassPortraitUrl =
   'https://commons.wikimedia.org/wiki/Special:FilePath/Karl_Weierstrass.jpg?width=900';
 
+import { blogPosts } from '../data/blogPosts';
+
 export function BlogPage() {
+  const [blogList, setBlogList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const data = await blogService.getBlogs();
+        if (Array.isArray(data)) {
+          setBlogList(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch blogs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  const displayPosts = blogList.length > 0 ? blogList : blogPosts;
+
   return (
     <div className="min-h-screen">
       <section className="bg-white border-b border-gray-200">
@@ -56,53 +80,59 @@ export function BlogPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-baseline justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">블로그</h2>
-            <span className="text-sm text-gray-500">{blogPosts.length}개 포스트</span>
+            <span className="text-sm text-gray-500">{displayPosts.length}개 포스트</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {blogPosts.map((post, index) => (
-              <Link key={post.id} to={`/blog/${post.id}`} className="block">
-                <motion.article
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.07 }}
-                  whileHover={{ y: -6 }}
-                  className="group cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 h-full"
-                >
-                  <div className="relative h-44 overflow-hidden bg-gray-100">
-                    <ImageWithFallback
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <span className="px-2 py-0.5 bg-white/95 rounded text-xs font-medium text-gray-700">
-                        {post.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <h2 className="text-base font-semibold mb-2 text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                      {post.title}
-                    </h2>
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{post.excerpt}</p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <div className="flex items-center gap-1"><User className="w-3 h-3" /><span>{post.author}</span></div>
-                        <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span>{post.readTime}</span></div>
+          {loading && blogList.length === 0 ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {displayPosts.map((post, index) => (
+                <Link key={post.id} to={`/blog/${post.id}`} className="block">
+                  <motion.article
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.07 }}
+                    whileHover={{ y: -6 }}
+                    className="group cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 h-full"
+                  >
+                    <div className="relative h-44 overflow-hidden bg-gray-100">
+                      <ImageWithFallback
+                        src={post.image || 'https://via.placeholder.com/400x200'}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="px-2 py-0.5 bg-white/95 rounded text-xs font-medium text-gray-700">
+                          {post.category || 'General'}
+                        </span>
                       </div>
-                      <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
-                        읽기 <ArrowRight className="w-3 h-3" />
-                      </span>
                     </div>
-                  </div>
-                </motion.article>
-              </Link>
-            ))}
-          </div>
+
+                    <div className="p-5">
+                      <h2 className="text-base font-semibold mb-2 text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                        {post.title}
+                      </h2>
+                      <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{post.excerpt || post.summary}</p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex items-center gap-1"><User className="w-3 h-3" /><span>{post.author || post.authorName}</span></div>
+                          <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span>{post.readTime || '5분'}</span></div>
+                        </div>
+                        <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                          읽기 <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </div>
+                  </motion.article>
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-8">
             <motion.button

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, Github } from 'lucide-react';
+import { authService } from '../services/authService';
 
 
 export function LoginPage() {
@@ -10,10 +11,18 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => navigate('/mypage'), 1500);
+    try {
+      await authService.login(form);
+      navigate('/mypage');
+    } catch (error) {
+      console.error('Login failed:', error);
+      alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

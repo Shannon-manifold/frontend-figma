@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router';
+import { userService } from '../services/userService';
+import { User } from '../services/types';
 import {
   BookOpen, MessageSquare, Heart, Award,
   Edit3, Check, X, ChevronRight, Bookmark,
@@ -305,12 +307,53 @@ const TABS = [
 
 export function MyPage() {
   const [activeTab, setActiveTab] = useState('proofs');
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [editingBio, setEditingBio] = useState(false);
   const [bio, setBio] = useState(USER.bio);
   const [draftBio, setDraftBio] = useState(USER.bio);
 
-  const saveBio = () => { setBio(draftBio); setEditingBio(false); };
-  const cancelBio = () => { setDraftBio(bio); setEditingBio(false); };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await userService.getMe();
+        if (data && typeof data === 'object') {
+          setUser(data);
+          if (data.bio) {
+            setBio(data.bio);
+            setDraftBio(data.bio);
+          }
+        } else {
+          // Fallback if backend returns a string
+          setUser(USER);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        setUser(USER); // Fallback to mock
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const saveBio = async () => {
+    try {
+      await userService.updateMe({ bio: draftBio });
+      setBio(draftBio);
+      setEditingBio(false);
+    } catch (error) {
+      console.error('Failed to save bio:', error);
+      alert('소개 저장에 실패했습니다.');
+    }
+  };
+
+  const cancelBio = () => {
+    setDraftBio(bio);
+    setEditingBio(false);
+  };
+
+  const currentUser = user || USER;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
@@ -324,17 +367,17 @@ export function MyPage() {
       >
         {/* 아바타 */}
         <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 select-none">
-          {USER.name[0]}
+          {currentUser.name[0]}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap mb-1">
-            <h1 className="text-xl font-bold text-gray-900">{USER.name}</h1>
+            <h1 className="text-xl font-bold text-gray-900">{currentUser.name}</h1>
             <span className="text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
-              {USER.system}
+              {currentUser.system || 'Lean 4'}
             </span>
           </div>
-          <p className="text-sm text-gray-500 mb-2">{USER.email}</p>
+          <p className="text-sm text-gray-500 mb-2">{currentUser.email}</p>
 
           {/* 소개 편집 */}
           <AnimatePresence mode="wait">
@@ -375,7 +418,7 @@ export function MyPage() {
             )}
           </AnimatePresence>
 
-          <p className="text-xs text-gray-400 mt-2">{USER.joinDate} 가입</p>
+          <p className="text-xs text-gray-400 mt-2">{currentUser.joinDate || '2026년 5월'} 가입</p>
         </div>
       </motion.div>
 
