@@ -2,9 +2,43 @@ import { motion } from "motion/react";
 import { MessageCircle, ThumbsUp, Eye, Calendar, User, Award } from "lucide-react";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { Link } from "react-router";
-import { questions } from "../data/questions";
+import { questions as mockQuestions } from "../data/questions";
+import { questionService } from "../services/questionService";
+import { useState, useEffect } from "react";
 
 export function QnAPage() {
+  const [questionList, setQuestionList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const data = await questionService.getQuestions();
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+          setQuestionList(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch questions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, []);
+
+  const questions = (questionList.length > 0 ? questionList : mockQuestions).map((q: any) => ({
+    id: q.id,
+    title: q.title,
+    description: q.description,
+    author: q.authorName || q.author || "Anonymous",
+    date: q.date,
+    views: q.views || 0,
+    answers: q.answersCount !== undefined ? q.answersCount : (q.answers || 0),
+    likes: q.likes || 0,
+    tags: q.tags || [],
+    status: q.status === "answered" ? "answered" : "open",
+  }));
+
   const statusStyle = {
     answered: "bg-green-50 text-green-700 border-green-200",
     open: "bg-blue-50 text-blue-700 border-blue-200",

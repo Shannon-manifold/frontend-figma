@@ -1,8 +1,9 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, Star, Code2, Calendar, MessageSquare, CheckCircle, BookOpen, FileText, Wrench, Award } from "lucide-react";
+import { ArrowLeft, Star, Code2, Calendar, MessageSquare, CheckCircle, BookOpen, FileText, Wrench, Award, Loader2 } from "lucide-react";
 import { getContributorById } from "../data/contributors";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { userService } from "../services/userService";
 
 const activityIcons: Record<string, typeof CheckCircle> = {
   proof: CheckCircle, answer: MessageSquare, review: FileText,
@@ -11,9 +12,39 @@ const activityIcons: Record<string, typeof CheckCircle> = {
 
 export function ContributorDetailPage() {
   const { contributorId } = useParams();
-  const contributor = getContributorById(Number(contributorId));
+  const [rawContributor, setRawContributor] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [contributorId]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const data = await userService.getUserProfile(Number(contributorId));
+        if (data && typeof data === 'object' && data.id) {
+          setRawContributor(data);
+        } else {
+          setRawContributor(getContributorById(Number(contributorId)));
+        }
+      } catch (error) {
+        console.error("Failed to fetch contributor profile:", error);
+        setRawContributor(getContributorById(Number(contributorId)));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [contributorId]);
+
+  const contributor = rawContributor;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!contributor) {
     return (

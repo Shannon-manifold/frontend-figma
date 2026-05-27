@@ -19,5 +19,14 @@ export const userService = {
 
   async getMyBookmarks(): Promise<any> {
     return fetcher('/api/v1/users/me/bookmarks');
+  },
+
+  async getContributors(): Promise<any> {
+    return fetcher('/api/v1/users');
+  },
+
+  async getUserProfile(userId: number): Promise<any> {
+    return fetcher(`/api/v1/users/${userId}`);
   }
 };
+

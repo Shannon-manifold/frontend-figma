@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, CheckCircle, MessageCircle, Heart, Trophy, X, Check } from 'lucide-react';
+import { notificationService } from '../services/notificationService';
+import { authService } from '../services/authService';
 
 type Notification = {
   id: number;
@@ -42,9 +44,50 @@ export function NotificationPanel() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const markAll = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const markOne = (id: number) => setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  const dismiss = (id: number) => setNotifications((prev) => prev.filter((n) => n.id !== id));
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!authService.isAuthenticated()) {
+        return;
+      }
+      try {
+        const data = await notificationService.getNotifications();
+        if (Array.isArray(data) && data.length > 0) {
+          // map backend notification format if fields differ
+          setNotifications(data as Notification[]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      }
+    };
+    
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [open]);
+
+  const markAll = async () => {
+    try {
+      await notificationService.readAllNotifications();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    }
+  };
+
+  const markOne = async (id: number) => {
+    try {
+      await notificationService.readNotification(id);
+      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    }
+  };
+
+  const dismiss = (id: number) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   return (
     <div ref={ref} className="relative">

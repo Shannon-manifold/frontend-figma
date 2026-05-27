@@ -9,93 +9,148 @@ import {
   Target,
   Trophy,
   Users,
+  Loader2,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/ImageWithFallback";
+import { useState, useEffect } from "react";
+import { challengeService } from "../services/challengeService";
 
 const wilesPortraitUrl =
   "https://mblogthumb-phinf.pstatic.net/MjAxOTA1MjBfMjk3/MDAxNTU4MzY0MjM2NDg3.lPmwKG7feBv7t1-t2EdCbD9V5OWEfBhgFF-V5-9IA-wg.-NA6WYy5LTJPXUDIVgNppKR_04S4Gd8O8RDh4DUa060g.PNG.math1505tj/SE-a2d185ee-3faf-4149-89b7-e6698557d5d6.png?type=w800";
 
+const mockChallenges = [
+  {
+    id: 1,
+    title: "리만 가설",
+    field: "해석적 정수론",
+    description:
+      "리만 제타 함수의 비자명한 영점이 모두 실수부 1/2 위에 놓인다는 난제입니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$742,500",
+    backers: 1284,
+    progress: 74,
+    difficulty: "Millennium",
+    proofSystem: "Lean 4",
+    accent: "from-indigo-400 to-blue-600",
+  },
+  {
+    id: 2,
+    title: "P 대 NP 문제",
+    field: "계산 복잡도 이론",
+    description:
+      "빠르게 검증할 수 있는 모든 문제가 빠르게 풀릴 수도 있는지 묻는 컴퓨터 과학의 핵심 난제입니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$681,200",
+    backers: 997,
+    progress: 68,
+    difficulty: "Millennium",
+    proofSystem: "Coq",
+    accent: "from-emerald-400 to-teal-600",
+  },
+  {
+    id: 3,
+    title: "버치-스위너턴다이어 추측",
+    field: "대수기하 · 정수론",
+    description:
+      "타원곡선의 유리점 구조와 L-함수의 영점 차수가 깊게 연결되어 있다는 추측입니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$528,900",
+    backers: 763,
+    progress: 53,
+    difficulty: "Millennium",
+    proofSystem: "Isabelle",
+    accent: "from-cyan-400 to-sky-600",
+  },
+  {
+    id: 4,
+    title: "호지 추측",
+    field: "대수기하",
+    description:
+      "복소 대수다양체의 특정 코호몰로지 클래스가 대수적 순환으로 표현되는지 묻습니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$419,300",
+    backers: 512,
+    progress: 42,
+    difficulty: "Millennium",
+    proofSystem: "Lean 4",
+    accent: "from-fuchsia-400 to-rose-600",
+  },
+  {
+    id: 5,
+    title: "나비에-스토크스 존재성과 매끄러움",
+    field: "편미분방정식",
+    description:
+      "3차원 비압축성 유체 방정식의 해가 항상 존재하고 매끄러운지 밝히는 문제입니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$390,600",
+    backers: 448,
+    progress: 39,
+    difficulty: "Millennium",
+    proofSystem: "Agda",
+    accent: "from-orange-400 to-red-600",
+  },
+  {
+    id: 6,
+    title: "양-밀스 질량 간극",
+    field: "수리물리",
+    description:
+      "양-밀스 이론의 엄밀한 구성과 양의 질량 간극 존재를 증명하는 문제입니다.",
+    prize: "$1,000,000",
+    sponsorPool: "$356,800",
+    backers: 391,
+    progress: 36,
+    difficulty: "Millennium",
+    proofSystem: "Lean 4",
+    accent: "from-violet-400 to-purple-600",
+  },
+];
+
 export function ChallengesPage() {
-  const challenges = [
-    {
-      title: "리만 가설",
-      field: "해석적 정수론",
-      description:
-        "리만 제타 함수의 비자명한 영점이 모두 실수부 1/2 위에 놓인다는 난제입니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$742,500",
-      backers: 1284,
-      progress: 74,
-      difficulty: "Millennium",
-      proofSystem: "Lean 4",
-      accent: "from-indigo-400 to-blue-600",
-    },
-    {
-      title: "P 대 NP 문제",
-      field: "계산 복잡도 이론",
-      description:
-        "빠르게 검증할 수 있는 모든 문제가 빠르게 풀릴 수도 있는지 묻는 컴퓨터 과학의 핵심 난제입니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$681,200",
-      backers: 997,
-      progress: 68,
-      difficulty: "Millennium",
-      proofSystem: "Coq",
-      accent: "from-emerald-400 to-teal-600",
-    },
-    {
-      title: "버치-스위너턴다이어 추측",
-      field: "대수기하 · 정수론",
-      description:
-        "타원곡선의 유리점 구조와 L-함수의 영점 차수가 깊게 연결되어 있다는 추측입니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$528,900",
-      backers: 763,
-      progress: 53,
-      difficulty: "Millennium",
-      proofSystem: "Isabelle",
-      accent: "from-cyan-400 to-sky-600",
-    },
-    {
-      title: "호지 추측",
-      field: "대수기하",
-      description:
-        "복소 대수다양체의 특정 코호몰로지 클래스가 대수적 순환으로 표현되는지 묻습니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$419,300",
-      backers: 512,
-      progress: 42,
-      difficulty: "Millennium",
-      proofSystem: "Lean 4",
-      accent: "from-fuchsia-400 to-rose-600",
-    },
-    {
-      title: "나비에-스토크스 존재성과 매끄러움",
-      field: "편미분방정식",
-      description:
-        "3차원 비압축성 유체 방정식의 해가 항상 존재하고 매끄러운지 밝히는 문제입니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$390,600",
-      backers: 448,
-      progress: 39,
-      difficulty: "Millennium",
-      proofSystem: "Agda",
-      accent: "from-orange-400 to-red-600",
-    },
-    {
-      title: "양-밀스 질량 간극",
-      field: "수리물리",
-      description:
-        "양-밀스 이론의 엄밀한 구성과 양의 질량 간극 존재를 증명하는 문제입니다.",
-      prize: "$1,000,000",
-      sponsorPool: "$356,800",
-      backers: 391,
-      progress: 36,
-      difficulty: "Millennium",
-      proofSystem: "Lean 4",
-      accent: "from-violet-400 to-purple-600",
-    },
-  ];
+  const [challengeList, setChallengeList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [localSponsors, setLocalSponsors] = useState<{ [key: number]: number }>({});
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        const data = await challengeService.getChallenges();
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+          setChallengeList(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch challenges:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChallenges();
+  }, []);
+
+  const handleSponsor = async (id: number) => {
+    try {
+      const updated = await challengeService.sponsorChallenge(id);
+      setChallengeList((prev) => prev.map((c) => c.id === id ? updated : c));
+      alert("후원이 완료되었습니다!");
+    } catch (error) {
+      console.error("Failed to sponsor challenge, updating locally:", error);
+      setLocalSponsors((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      alert("후원이 완료되었습니다! (로컬 적용)");
+    }
+  };
+
+  const challenges = (challengeList.length > 0 ? challengeList : mockChallenges).map((c: any) => ({
+    id: c.id,
+    title: c.title,
+    field: c.field,
+    description: c.description,
+    prize: c.prize,
+    sponsorPool: c.sponsorPool,
+    backers: c.backers + (localSponsors[c.id] || 0),
+    progress: c.progress,
+    difficulty: c.difficulty,
+    proofSystem: c.proofSystem,
+    accent: c.accent || "from-indigo-400 to-blue-600",
+  }));
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -330,7 +385,7 @@ export function ChallengesPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition">
+                  <button onClick={() => handleSponsor(challenge.id)} className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition">
                     <BadgeDollarSign className="w-4 h-4" />
                     후원하기
                   </button>

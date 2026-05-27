@@ -1,13 +1,35 @@
 import { motion } from "motion/react";
-import { Award, BookOpen, CheckCircle, Code2, MessageCircle, Star, Users } from "lucide-react";
+import { Award, BookOpen, CheckCircle, Code2, MessageCircle, Star, Users, Loader2 } from "lucide-react";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { Link } from "react-router";
-import { contributors } from "../data/contributors";
+import { contributors as mockContributors } from "../data/contributors";
+import { useState, useEffect } from "react";
+import { userService } from "../services/userService";
 
 const newtonPortraitUrl =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Portrait_of_Sir_Isaac_Newton%2C_1689_%28brightened%29.jpg?width=900";
 
 export function ContributorsPage() {
+  const [contributorList, setContributorList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContributors = async () => {
+      try {
+        const data = await userService.getContributors();
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+          setContributorList(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contributors:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContributors();
+  }, []);
+
+  const contributors = contributorList.length > 0 ? contributorList : mockContributors;
   const stats = [
     { label: "전체 기여자", value: "892", icon: Users, color: "text-indigo-600" },
     { label: "검증된 증명", value: "1,247", icon: CheckCircle, color: "text-green-600" },

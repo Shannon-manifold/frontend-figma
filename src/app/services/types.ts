@@ -86,3 +86,83 @@ export interface BlogResponse {
   authorName: string;
   createdAt: string;
 }
+
+export interface AnswerResponse {
+  id: number;
+  questionId: number;
+  authorId: number;
+  authorName: string;
+  date: string;
+  content: string;
+  likes: number;
+  accepted: boolean;
+}
+
+export interface QuestionResponse {
+  id: number;
+  title: string;
+  description: string;
+  authorName: string;
+  date: string;
+  views: number;
+  answersCount: number;
+  likes: number;
+  status: 'answered' | 'open';
+  tags: string[];
+}
+
+export interface QuestionDetailResponse {
+  id: number;
+  title: string;
+  description: string;
+  authorId: number;
+  authorName: string;
+  date: string;
+  views: number;
+  answersCount: number;
+  likes: number;
+  status: 'answered' | 'open';
+  content: string;
+  tags: string[];
+  answers: AnswerResponse[];
+}
+
+export interface ChallengeResponse {
+  id: number;
+  title: string;
+  field: string;
+  description: string;
+  prize: string;
+  sponsorPool: string;
+  backers: number;
+  progress: number;
+  difficulty: 'MILLENNIUM' | 'HARD' | 'MEDIUM' | 'EASY';
+  proofSystem: string;
+  accent: string;
+}
+
+export interface ChallengeDetailResponse {
+  id: number;
+  title: string;
+  field: string;
+  description: string;
+  prize: string;
+  sponsorPool: string;
+  backers: number;
+  progress: number;
+  difficulty: 'MILLENNIUM' | 'HARD' | 'MEDIUM' | 'EASY';
+  proofSystem: string;
+  accent: string;
+  detailedDescription: string;
+  references?: { [key: string]: string }[];
+}
+
+export interface NotificationResponse {
+  id: number;
+  type: 'verified' | 'answer' | 'like' | 'challenge';
+  title: string;
+  body: string;
+  time: string;
+  read: boolean;
+}
+

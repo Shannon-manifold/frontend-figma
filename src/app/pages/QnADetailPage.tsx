@@ -1,8 +1,9 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag } from "lucide-react";
+import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag, Loader2 } from "lucide-react";
 import { getQuestionById } from "../data/questions";
 import { useEffect, useState } from "react";
+import { questionService } from "../services/questionService";
 
 function renderContent(text: string): string {
   let html = text;
@@ -24,14 +25,106 @@ function renderContent(text: string): string {
 
 export function QnADetailPage() {
   const { questionId } = useParams();
-  const question = getQuestionById(Number(questionId));
+  const [rawQuestion, setRawQuestion] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [answerContent, setAnswerContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [questionId]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const fetchQuestion = async () => {
+      setLoading(true);
+      try {
+        const data = await questionService.getQuestionDetail(Number(questionId));
+        if (data && typeof data === 'object' && data.id) {
+          setRawQuestion(data);
+        } else {
+          setRawQuestion(getQuestionById(Number(questionId)));
+        }
+      } catch (error) {
+        console.error("Failed to fetch question detail:", error);
+        setRawQuestion(getQuestionById(Number(questionId)));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestion();
+  }, [questionId]);
+
+  const question = rawQuestion ? {
+    id: rawQuestion.id,
+    title: rawQuestion.title,
+    description: rawQuestion.description,
+    author: rawQuestion.authorName || rawQuestion.author || "Anonymous",
+    date: rawQuestion.date,
+    views: rawQuestion.views || 0,
+    answers: rawQuestion.answersCount !== undefined ? rawQuestion.answersCount : (rawQuestion.answers || 0),
+    likes: rawQuestion.likes || 0,
+    tags: rawQuestion.tags || [],
+    status: rawQuestion.status === "answered" ? "answered" : "open",
+    content: rawQuestion.content || "",
+    answerList: (rawQuestion.answers || rawQuestion.answerList || []).map((a: any) => ({
+      id: a.id,
+      author: a.authorName || a.author || "Anonymous",
+      date: a.date,
+      content: a.content || "",
+      likes: a.likes || 0,
+      accepted: !!a.accepted
+    }))
+  } : null;
+
+  const handleLike = async () => {
+    if (!question) return;
+    try {
+      const newLikes = await questionService.toggleQuestionLike(question.id);
+      setLiked(!liked);
+      setRawQuestion((prev: any) => ({ ...prev, likes: newLikes }));
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+      setLiked(!liked);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!question) return;
+    try {
+      await questionService.toggleBookmark(question.id);
+      setBookmarked(!bookmarked);
+    } catch (error) {
+      console.error("Failed to toggle bookmark:", error);
+      setBookmarked(!bookmarked);
+    }
+  };
+
+  const handleSubmitAnswer = async () => {
+    if (!question || !answerContent.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await questionService.createAnswer(question.id, { content: answerContent });
+      const updated = await questionService.getQuestionDetail(question.id);
+      setRawQuestion(updated);
+      setAnswerContent("");
+    } catch (error) {
+      console.error("Failed to submit answer:", error);
+      alert("답변 등록에 실패했습니다. 로그인 상태를 확인해주세요.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!question) {
     return (
+
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <div className="text-6xl mb-4">❓</div>
@@ -60,7 +153,7 @@ export function QnADetailPage() {
             <ArrowLeft className="w-4 h-4" />Q&A
           </Link>
           <div className="flex items-center gap-2">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setBookmarked(!bookmarked)}
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleBookmark}
               className={`p-2 rounded-lg transition-colors ${bookmarked ? "text-indigo-600 bg-indigo-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}>
               <Bookmark className="w-4 h-4" fill={bookmarked ? "currentColor" : "none"} />
             </motion.button>
@@ -111,9 +204,9 @@ export function QnADetailPage() {
 
             {/* Footer actions */}
             <div className="border-t border-gray-100 px-8 py-4 bg-gray-50/50 flex items-center gap-4">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setLiked(!liked)}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleLike}
                 className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? "text-indigo-600" : "text-gray-500 hover:text-gray-700"}`}>
-                <ChevronUp className="w-4 h-4" />{question.likes + (liked ? 1 : 0)}
+                <ChevronUp className="w-4 h-4" />{question.likes}
               </motion.button>
               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <MessageCircle className="w-4 h-4" />{question.answers}개 답변
@@ -132,10 +225,6 @@ export function QnADetailPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
               <div className="text-4xl mb-3">💬</div>
               <p className="text-gray-500 text-sm mb-4">아직 답변이 없습니다. 첫 번째 답변을 달아보세요!</p>
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors font-medium">
-                답변 작성하기
-              </motion.button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -186,13 +275,18 @@ export function QnADetailPage() {
           <textarea
             rows={6}
             placeholder="답변을 작성해주세요. 마크다운과 코드 블록을 사용할 수 있습니다..."
+            value={answerContent}
+            onChange={(e) => setAnswerContent(e.target.value)}
+            disabled={submitting}
             className="w-full border border-gray-200 rounded-lg p-4 text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
           />
           <div className="flex items-center justify-between mt-4">
             <p className="text-xs text-gray-400">마크다운, ```코드 블록``` 지원</p>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors font-medium">
-              답변 등록
+              onClick={handleSubmitAnswer}
+              disabled={submitting}
+              className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
+              {submitting ? "등록 중..." : "답변 등록"}
             </motion.button>
           </div>
         </motion.div>
@@ -200,3 +294,4 @@ export function QnADetailPage() {
     </div>
   );
 }
+
