@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router';
 
 interface TheoremCardProps {
-  id: string;
+  id: number | string;
   title: string;
   description: string;
   status: 'verified' | 'pending' | 'failed';
