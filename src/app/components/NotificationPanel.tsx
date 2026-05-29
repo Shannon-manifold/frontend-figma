@@ -13,14 +13,20 @@ type Notification = {
   read: boolean;
 };
 
-const INITIAL: Notification[] = [
-  { id: 1, type: 'verified', title: '증명 검증 완료', body: '페르마의 마지막 정리 (n=3) 증명이 검증됐습니다.', time: '방금 전', read: false },
-  { id: 2, type: 'answer', title: '새 답변', body: '"Lean 4에서 귀납적 정의를 사용하는 방법" 질문에 답변이 달렸습니다.', time: '5분 전', read: false },
-  { id: 3, type: 'like', title: '좋아요', body: '김수학 님이 회원님의 증명에 좋아요를 눌렀습니다.', time: '23분 전', read: false },
-  { id: 4, type: 'challenge', title: '난제 후원 달성', body: '리만 가설 후원 풀이 목표액 74%에 도달했습니다.', time: '1시간 전', read: true },
-  { id: 5, type: 'answer', title: '새 답변', body: '"Coq에서 리스트 연산 증명 시 막힌 부분" 질문에 답변이 달렸습니다.', time: '3시간 전', read: true },
-  { id: 6, type: 'verified', title: '증명 검증 완료', body: '사칙연산의 결합법칙 증명이 커뮤니티 리뷰를 통과했습니다.', time: '어제', read: true },
-];
+function formatRelativeTime(dateStr: string | Date): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return '방금 전';
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  return `${diffDays}일 전`;
+}
 
 const ICON = {
   verified: { icon: CheckCircle, bg: 'bg-green-100', color: 'text-green-600' },
@@ -30,8 +36,12 @@ const ICON = {
 };
 
 export function NotificationPanel() {
+  if (!authService.isAuthenticated()) {
+    return null;
+  }
+
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   const unread = notifications.filter((n) => !n.read).length;
@@ -46,14 +56,18 @@ export function NotificationPanel() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!authService.isAuthenticated()) {
-        return;
-      }
       try {
         const data = await notificationService.getNotifications();
-        if (Array.isArray(data) && data.length > 0) {
-          // map backend notification format if fields differ
-          setNotifications(data as Notification[]);
+        if (Array.isArray(data)) {
+          const mapped = data.map((n: any) => ({
+            id: n.id,
+            type: (n.type || '').toLowerCase() as any,
+            title: n.title,
+            body: n.message,
+            time: formatRelativeTime(n.createdAt),
+            read: !!n.isRead
+          }));
+          setNotifications(mapped);
         }
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
