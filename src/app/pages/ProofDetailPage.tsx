@@ -16,7 +16,6 @@ import {
   User,
   Loader2,
 } from "lucide-react";
-import { getProofById } from "../data/proofs";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -209,15 +208,11 @@ export function ProofDetailPage() {
         if (data && typeof data === 'object') {
           setProof(data);
         } else {
-          // Fallback to mock data if response is invalid/placeholder
-          const mockProof = getProofById(Number(proofId));
-          setProof(mockProof);
+          setProof(null);
         }
       } catch (error) {
         console.error("Failed to fetch proof details:", error);
-        // Fallback to mock data
-        const mockProof = getProofById(Number(proofId));
-        setProof(mockProof);
+        setProof(null);
       } finally {
         setLoading(false);
       }

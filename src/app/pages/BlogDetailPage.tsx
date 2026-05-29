@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
 import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmark, Loader2 } from "lucide-react";
-import { getBlogPostById, blogPosts } from "../data/blogPosts";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { useEffect, useState } from "react";
 import { blogService } from "../services/blogService";
@@ -55,6 +54,7 @@ export function BlogDetailPage() {
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -65,20 +65,32 @@ export function BlogDetailPage() {
         if (data && typeof data === 'object') {
           setPost(data);
         } else {
-          // Fallback to mock data if backend returns placeholder string
-          const mockPost = getBlogPostById(Number(blogId));
-          setPost(mockPost);
+          setPost(null);
         }
       } catch (error) {
         console.error('Failed to fetch blog post:', error);
-        const mockPost = getBlogPostById(Number(blogId));
-        setPost(mockPost);
+        setPost(null);
       } finally {
         setLoading(false);
       }
     };
     fetchPost();
   }, [blogId]);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (!post) return;
+      try {
+        const data = await blogService.getBlogs();
+        if (Array.isArray(data)) {
+          setRelatedPosts(data.filter((p) => p.id !== post.id).slice(0, 3));
+        }
+      } catch (error) {
+        console.error('Failed to fetch related posts:', error);
+      }
+    };
+    fetchRelated();
+  }, [post]);
 
   if (loading) {
     return (
@@ -103,7 +115,6 @@ export function BlogDetailPage() {
     );
   }
 
-  const relatedPosts = blogPosts.filter((p) => p.id !== post.id).slice(0, 3);
   const renderedContent = renderMarkdown(post.content);
 
   return (

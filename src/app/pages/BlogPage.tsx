@@ -8,8 +8,6 @@ import { useState, useEffect } from 'react';
 const weierstrassPortraitUrl =
   'https://commons.wikimedia.org/wiki/Special:FilePath/Karl_Weierstrass.jpg?width=900';
 
-import { blogPosts } from '../data/blogPosts';
-
 export function BlogPage() {
   const [blogList, setBlogList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +28,7 @@ export function BlogPage() {
     fetchBlogs();
   }, []);
 
-  const displayPosts = blogList.length > 0 ? blogList : blogPosts;
+  const displayPosts = blogList;
 
   return (
     <div className="min-h-screen">
