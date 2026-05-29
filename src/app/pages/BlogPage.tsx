@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Calendar, Clock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Clock, User, ArrowRight, Loader2, Edit3 } from 'lucide-react';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { Link } from 'react-router';
 import { blogService } from '../services/blogService';
@@ -78,9 +78,21 @@ export function BlogPage() {
 
       <section className="py-10 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-baseline justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">블로그</h2>
-            <span className="text-sm text-gray-500">{displayPosts.length}개 포스트</span>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-xl font-semibold text-gray-900">블로그</h2>
+              <span className="text-sm text-gray-500">{displayPosts.length}개 포스트</span>
+            </div>
+            <Link to="/blog/write">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+              >
+                <Edit3 className="w-4 h-4" />
+                글 작성하기
+              </motion.button>
+            </Link>
           </div>
 
           {loading && blogList.length === 0 ? (

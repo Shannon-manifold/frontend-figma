@@ -27,5 +27,24 @@ export const proofService = {
     return fetcher<string>(`/api/proofs/${id}/bookmarks`, {
       method: 'POST',
     });
+  },
+
+  async updateProof(id: number, data: any): Promise<ProofDetailResponse> {
+    return fetcher<ProofDetailResponse>(`/api/proofs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteProof(id: number): Promise<void> {
+    await fetcher(`/api/proofs/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async verifyProof(id: number): Promise<ProofDetailResponse> {
+    return fetcher<ProofDetailResponse>(`/api/proofs/${id}/verify`, {
+      method: 'POST',
+    });
   }
 };

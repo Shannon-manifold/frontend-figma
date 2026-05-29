@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -14,11 +14,14 @@ import {
   ChevronDown,
   ChevronUp,
   User,
+  Loader2,
 } from "lucide-react";
 import { getProofById } from "../data/proofs";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { proofService } from "../services/proofService";
+import { userService } from "../services/userService";
 
 function renderLatex(latex: string): string {
   // Split by display math ($$...$$), then process inline math ($...$)
@@ -181,16 +184,98 @@ const sampleComments = [
 
 export function ProofDetailPage() {
   const { proofId } = useParams();
-  const proof = getProofById(Number(proofId));
-  const contentRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  
+  const [proof, setProof] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  
   const [showCode, setShowCode] = useState(false);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const data = await proofService.getProofDetail(Number(proofId));
+        if (data && typeof data === 'object') {
+          setProof(data);
+        } else {
+          // Fallback to mock data if response is invalid/placeholder
+          const mockProof = getProofById(Number(proofId));
+          setProof(mockProof);
+        }
+      } catch (error) {
+        console.error("Failed to fetch proof details:", error);
+        // Fallback to mock data
+        const mockProof = getProofById(Number(proofId));
+        setProof(mockProof);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, [proofId]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await userService.getMe();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Failed to get current user:", err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleVerify = async () => {
+    if (!proof) return;
+    setVerifying(true);
+    try {
+      const updated = await proofService.verifyProof(proof.id);
+      setProof(updated);
+      alert(`검증 완료! 결과: ${updated.status === 'verified' ? '성공' : '실패'}`);
+    } catch (error: any) {
+      console.error("Verification failed:", error);
+      alert(error.message || "검증 실행 중 오류가 발생했습니다.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!proof) return;
+    if (!window.confirm("이 증명을 정말 삭제하시겠습니까?")) return;
+    setDeleting(true);
+    try {
+      await proofService.deleteProof(proof.id);
+      alert("증명이 성공적으로 삭제되었습니다.");
+      navigate("/proofs");
+    } catch (error: any) {
+      console.error("Failed to delete proof:", error);
+      alert(error.message || "증명 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!proof) {
     return (
@@ -219,7 +304,8 @@ export function ProofDetailPage() {
     );
   }
 
-  const config = statusConfig[proof.status];
+  const isProver = currentUser && proof && (currentUser.id === proof.proverId);
+  const config = statusConfig[proof.status as keyof typeof statusConfig] || statusConfig.pending;
   const StatusIcon = config.icon;
   const renderedHtml = processLatexToHtml(proof.latex);
 
@@ -302,10 +388,10 @@ export function ProofDetailPage() {
               <div className="flex items-center gap-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                    {proof.prover[0]}
+                    {(proof.prover || proof.proverName)?.[0] || '?'}
                   </div>
                   <span className="font-medium text-gray-700">
-                    {proof.prover}
+                    {proof.prover || proof.proverName}
                   </span>
                 </div>
                 <span>·</span>
@@ -323,17 +409,41 @@ export function ProofDetailPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className={`rounded-xl border p-4 mb-6 flex items-start gap-3 ${config.bg}`}
+              className={`rounded-xl border p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${config.bg}`}
             >
-              <StatusIcon className={`w-5 h-5 mt-0.5 ${config.color}`} />
-              <div>
-                <div className={`font-semibold text-sm ${config.color}`}>
-                  {config.label}
-                </div>
-                <div className="text-sm text-gray-600 mt-0.5">
-                  {config.description}
+              <div className="flex items-start gap-3">
+                <StatusIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`} />
+                <div>
+                  <div className={`font-semibold text-sm ${config.color}`}>
+                    {config.label}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-0.5">
+                    {config.description}
+                  </div>
                 </div>
               </div>
+
+              {isProver && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleVerify}
+                  disabled={verifying}
+                  className="sm:flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
+                >
+                  {verifying ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      검증 중...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      형식 검증 실행하기
+                    </>
+                  )}
+                </motion.button>
+              )}
             </motion.div>
 
             {/* LaTeX Proof */}
@@ -412,7 +522,7 @@ export function ProofDetailPage() {
             >
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="text-base font-semibold text-gray-900">
-                  댓글 {proof.comments}
+                  댓글 {proof.comments ?? proof.commentsCount ?? 0}
                 </h2>
               </div>
 
@@ -498,7 +608,7 @@ export function ProofDetailPage() {
                     className="w-4 h-4"
                     fill={liked ? "currentColor" : "none"}
                   />
-                  {liked ? proof.likes + 1 : proof.likes}
+                  {liked ? (proof.likes || 0) + 1 : (proof.likes || 0)}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -506,7 +616,7 @@ export function ProofDetailPage() {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   <MessageSquare className="w-4 h-4" />
-                  {proof.comments}
+                  {proof.comments ?? proof.commentsCount ?? 0}
                 </motion.button>
               </div>
             </div>
@@ -529,7 +639,7 @@ export function ProofDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-500">작성자</dt>
-                  <dd className="text-gray-900 font-medium">{proof.prover}</dd>
+                  <dd className="text-gray-900 font-medium">{proof.prover || proof.proverName}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-500">작성일</dt>
@@ -545,6 +655,30 @@ export function ProofDetailPage() {
                   </dd>
                 </div>
               </dl>
+
+              {isProver && (
+                <div className="border-t border-gray-100 pt-4 mt-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        삭제 중...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-3.5 h-3.5" />
+                        증명 삭제하기
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              )}
             </div>
 
             {/* Related */}

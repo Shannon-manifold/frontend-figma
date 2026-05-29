@@ -130,7 +130,7 @@ export function BlogDetailPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Hero image */}
           <div className="relative h-64 sm:h-80 rounded-xl overflow-hidden mb-8 bg-gray-100">
-            <ImageWithFallback src={post.image} alt={post.title} className="w-full h-full object-cover" />
+            <ImageWithFallback src={post.image || post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
             <div className="absolute top-4 left-4">
               <span className="px-3 py-1 bg-white/95 rounded-full text-xs font-medium text-gray-700">{post.category}</span>
             </div>
@@ -143,8 +143,8 @@ export function BlogDetailPage() {
           {/* Meta */}
           <div className="flex items-center gap-4 pb-8 border-b border-gray-200 text-sm text-gray-500">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">{post.author[0]}</div>
-              <span className="font-medium text-gray-700">{post.author}</span>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">{(post.author || post.authorName)?.[0] || '?'}</div>
+              <span className="font-medium text-gray-700">{post.author || post.authorName}</span>
             </div>
             <span>·</span>
             <div className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{post.date}</div>
