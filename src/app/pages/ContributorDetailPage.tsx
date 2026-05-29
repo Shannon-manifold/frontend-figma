@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
 import { ArrowLeft, Star, Code2, Calendar, MessageSquare, CheckCircle, BookOpen, FileText, Wrench, Award, Loader2 } from "lucide-react";
-import { getContributorById } from "../data/contributors";
 import { useEffect, useState } from "react";
 import { userService } from "../services/userService";
 
@@ -24,11 +23,11 @@ export function ContributorDetailPage() {
         if (data && typeof data === 'object' && data.id) {
           setRawContributor(data);
         } else {
-          setRawContributor(getContributorById(Number(contributorId)));
+          setRawContributor(null);
         }
       } catch (error) {
         console.error("Failed to fetch contributor profile:", error);
-        setRawContributor(getContributorById(Number(contributorId)));
+        setRawContributor(null);
       } finally {
         setLoading(false);
       }
@@ -37,6 +36,9 @@ export function ContributorDetailPage() {
   }, [contributorId]);
 
   const contributor = rawContributor;
+  const languages: string[] = contributor?.languages || [];
+  const achievements: any[] = contributor?.achievements || [];
+  const recentActivity: any[] = contributor?.recentActivity || [];
 
   if (loading) {
     return (
@@ -100,7 +102,7 @@ export function ContributorDetailPage() {
 
               {/* Languages */}
               <div className="mt-4 flex items-center gap-2 flex-wrap">
-                {contributor.languages.map((lang) => (
+                {languages.map((lang) => (
                   <span key={lang} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">{lang}</span>
                 ))}
               </div>
@@ -128,7 +130,7 @@ export function ContributorDetailPage() {
                 <Award className="w-4 h-4 text-indigo-600" />업적
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {contributor.achievements.map((a, i) => (
+                {achievements.map((a, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
                     <span className="text-2xl">{a.icon}</span>
                     <div>
@@ -146,7 +148,7 @@ export function ContributorDetailPage() {
                 <h2 className="text-base font-semibold text-gray-900">최근 활동</h2>
               </div>
               <div className="divide-y divide-gray-50">
-                {contributor.recentActivity.map((act, i) => {
+                {recentActivity.map((act, i) => {
                   const Icon = activityIcons[act.type] || CheckCircle;
                   return (
                     <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 + i * 0.05 }} className="px-6 py-4 flex items-center gap-4">
@@ -177,7 +179,7 @@ export function ContributorDetailPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">사용 언어</h3>
               <div className="space-y-2">
-                {contributor.languages.map((lang) => (
+                {languages.map((lang) => (
                   <div key={lang} className="flex items-center gap-2 text-sm">
                     <Code2 className="w-3.5 h-3.5 text-gray-400" />
                     <span className="text-gray-700">{lang}</span>

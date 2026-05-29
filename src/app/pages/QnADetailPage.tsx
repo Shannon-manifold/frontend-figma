@@ -53,6 +53,10 @@ export function QnADetailPage() {
     fetchQuestion();
   }, [questionId]);
 
+  const answersArray = rawQuestion && Array.isArray(rawQuestion.answers)
+    ? rawQuestion.answers
+    : (rawQuestion && Array.isArray(rawQuestion.answerList) ? rawQuestion.answerList : []);
+
   const question = rawQuestion ? {
     id: rawQuestion.id,
     title: rawQuestion.title,
@@ -60,12 +64,12 @@ export function QnADetailPage() {
     author: rawQuestion.authorName || rawQuestion.author || "Anonymous",
     date: rawQuestion.date,
     views: rawQuestion.views || 0,
-    answers: rawQuestion.answersCount !== undefined ? rawQuestion.answersCount : (rawQuestion.answers || 0),
+    answers: rawQuestion.answersCount !== undefined ? rawQuestion.answersCount : (Array.isArray(rawQuestion.answers) ? rawQuestion.answers.length : (rawQuestion.answers || 0)),
     likes: rawQuestion.likes || 0,
     tags: rawQuestion.tags || [],
     status: rawQuestion.status === "answered" ? "answered" : "open",
     content: rawQuestion.content || "",
-    answerList: (rawQuestion.answers || rawQuestion.answerList || []).map((a: any) => ({
+    answerList: answersArray.map((a: any) => ({
       id: a.id,
       author: a.authorName || a.author || "Anonymous",
       date: a.date,

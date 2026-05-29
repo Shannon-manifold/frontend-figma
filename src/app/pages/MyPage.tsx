@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 import { User } from '../services/types';
 import {
   BookOpen, MessageSquare, Heart, Award,
   Edit3, Check, X, ChevronRight, Bookmark,
   Bell, Shield, Trash2, ExternalLink, LogOut,
-  CheckCircle, Clock, HelpCircle,
+  CheckCircle, Clock, HelpCircle, Loader2,
 } from 'lucide-react';
 
 /* ─── mock data ─────────────────────────────────────── */
@@ -306,6 +307,8 @@ const TABS = [
 ];
 
 export function MyPage() {
+  const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState('proofs');
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -314,6 +317,13 @@ export function MyPage() {
   const [draftBio, setDraftBio] = useState(USER.bio);
 
   useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      alert('로그인이 필요한 서비스입니다.');
+      navigate('/login?redirect=/mypage');
+      return;
+    }
+    setCheckingAuth(false);
+
     const fetchUser = async () => {
       try {
         const data = await userService.getMe();
@@ -335,7 +345,15 @@ export function MyPage() {
       }
     };
     fetchUser();
-  }, []);
+  }, [navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   const saveBio = async () => {
     try {
