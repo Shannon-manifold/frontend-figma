@@ -4,6 +4,10 @@ import { Link, useNavigate } from 'react-router';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
 import { User } from '../services/types';
+import { proofService } from '../services/proofService';
+import { blogService } from '../services/blogService';
+import { questionService } from '../services/questionService';
+import { tutorialService } from '../services/tutorialService';
 import {
   BookOpen, MessageSquare, Heart, Award,
   Edit3, Check, X, ChevronRight, Bookmark,
@@ -59,10 +63,10 @@ const StatusBadge = ({ status }: { status: string }) =>
     </span>
   );
 
-function ProofsTab() {
+function ProofsTab({ proofs }: { proofs: any[] }) {
   return (
     <div className="space-y-3">
-      {MY_PROOFS.map((proof, i) => (
+      {proofs.map((proof, i) => (
         <motion.div
           key={proof.id}
           initial={{ opacity: 0, y: 8 }}
@@ -72,34 +76,41 @@ function ProofsTab() {
           className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
         >
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <StatusBadge status={proof.status} />
-                <span className="text-xs text-gray-400">{proof.system}</span>
+                <span className="text-xs text-gray-400">{proof.language}</span>
               </div>
               <p className="text-sm font-medium text-gray-900 truncate">{proof.title}</p>
               <p className="text-xs text-gray-400 mt-1">{proof.date}</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-400 flex-shrink-0">
               <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{proof.likes}</span>
-              <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />{proof.comments}</span>
-              <motion.button whileHover={{ x: 2 }} className="text-gray-400 hover:text-gray-700 transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </motion.button>
+              <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />{proof.commentsCount || proof.comments || 0}</span>
+              <Link to={`/proofs/${proof.id}`}>
+                <motion.button whileHover={{ x: 2 }} className="text-gray-400 hover:text-gray-700 transition-colors cursor-pointer">
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </Link>
             </div>
           </div>
         </motion.div>
       ))}
+      {proofs.length === 0 && (
+        <div className="py-12 text-center text-sm text-gray-400">
+          제출한 증명이 없습니다
+        </div>
+      )}
     </div>
   );
 }
 
-function QnATab() {
+function QnATab({ activities }: { activities: any[] }) {
   return (
     <div className="space-y-3">
-      {MY_QNA.map((item, i) => (
+      {activities.map((item, i) => (
         <motion.div
-          key={item.id}
+          key={i}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.06 }}
@@ -107,47 +118,55 @@ function QnATab() {
           className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
         >
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1.5">
-                {item.type === 'question' ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
-                    <HelpCircle className="w-3 h-3" />질문
+                {item.type === 'proof' ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                    <BookOpen className="w-3 h-3" />증명 기여
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                    <MessageSquare className="w-3 h-3" />답변
+                    <MessageSquare className="w-3 h-3" />답변 기여
                   </span>
-                )}
-                {item.solved && (
-                  <span className="text-xs text-green-600 font-medium">✓ 해결됨</span>
                 )}
               </div>
               <p className="text-sm font-medium text-gray-900 leading-snug">{item.title}</p>
               <p className="text-xs text-gray-400 mt-1">
-                {item.type === 'question'
-                  ? `답변 ${item.answers}개 · 조회 ${item.views}회 · ${item.date}`
-                  : `${item.answered} · ${item.date}`}
+                {item.date}
               </p>
             </div>
-            <motion.button whileHover={{ x: 2 }} className="text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
           </div>
         </motion.div>
       ))}
+      {activities.length === 0 && (
+        <div className="py-12 text-center text-sm text-gray-400">
+          활동 내역이 없습니다
+        </div>
+      )}
     </div>
   );
 }
 
-function BookmarksTab() {
-  const [list, setList] = useState(BOOKMARKS);
-
-  const remove = (id: number) => setList((prev) => prev.filter((b) => b.id !== id));
+function BookmarksTab({
+  bookmarks,
+  onRemove,
+}: {
+  bookmarks: any[];
+  onRemove: (id: number, targetType: string, targetId: number) => void;
+}) {
+  const getLinkPath = (type: string, targetId: number) => {
+    const t = type.toLowerCase();
+    if (t === 'proof') return `/proofs/${targetId}`;
+    if (t === 'blog') return `/blog/${targetId}`;
+    if (t === 'question') return `/qna/${targetId}`;
+    if (t === 'tutorial') return `/tutorials/${targetId}`;
+    return '#';
+  };
 
   return (
     <div className="space-y-3">
       <AnimatePresence>
-        {list.map((item, i) => (
+        {bookmarks.map((item, i) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 8 }}
@@ -158,28 +177,32 @@ function BookmarksTab() {
             className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{item.system}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    {item.logicSystem || item.targetType}
+                  </span>
                 </div>
                 <p className="text-sm font-medium text-gray-900">{item.title}</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  by {item.author} · <Heart className="w-3 h-3 inline" /> {item.likes} · {item.date}
+                  by {item.author || '알 수 없음'} · <Heart className="w-3 h-3 inline" /> {item.likes || 0}
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
+                <Link to={getLinkPath(item.targetType, item.targetId)}>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors rounded cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </motion.button>
+                </Link>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors rounded"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => remove(item.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded"
+                  onClick={() => onRemove(item.id, item.targetType, item.targetId)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </motion.button>
@@ -188,14 +211,14 @@ function BookmarksTab() {
           </motion.div>
         ))}
       </AnimatePresence>
-      {list.length === 0 && (
+      {bookmarks.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="py-12 text-center text-sm text-gray-400"
         >
           <Bookmark className="w-8 h-8 mx-auto mb-3 text-gray-200" />
-          북마크한 증명이 없습니다
+          북마크한 항목이 없습니다
         </motion.div>
       )}
     </div>
@@ -299,13 +322,6 @@ function SettingsTab() {
 }
 
 /* ─── main page ──────────────────────────────────────── */
-const TABS = [
-  { id: 'proofs', label: '내 증명', count: MY_PROOFS.length },
-  { id: 'qna', label: 'Q&A 활동', count: MY_QNA.length },
-  { id: 'bookmarks', label: '북마크', count: BOOKMARKS.length },
-  { id: 'settings', label: '설정', count: null },
-];
-
 export function MyPage() {
   const navigate = useNavigate();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -315,6 +331,10 @@ export function MyPage() {
   const [editingBio, setEditingBio] = useState(false);
   const [bio, setBio] = useState(USER.bio);
   const [draftBio, setDraftBio] = useState(USER.bio);
+
+  const [myProofs, setMyProofs] = useState<any[]>([]);
+  const [myActivities, setMyActivities] = useState<any[]>([]);
+  const [myBookmarks, setMyBookmarks] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authService.isAuthenticated()) {
@@ -333,13 +353,41 @@ export function MyPage() {
             setBio(data.bio);
             setDraftBio(data.bio);
           }
+
+          // Fetch user's own proofs
+          try {
+            const allProofs = await proofService.getAllProofs();
+            const userProofs = allProofs.filter((p: any) => p.prover === data.name);
+            setMyProofs(userProofs);
+          } catch (pe) {
+            console.error('Failed to fetch user proofs:', pe);
+          }
+
+          // Fetch user's activities
+          try {
+            const acts = await userService.getMyActivities();
+            if (Array.isArray(acts)) {
+              setMyActivities(acts);
+            }
+          } catch (ae) {
+            console.error('Failed to fetch user activities:', ae);
+          }
+
+          // Fetch user's bookmarks
+          try {
+            const bms = await userService.getMyBookmarks();
+            if (Array.isArray(bms)) {
+              setMyBookmarks(bms);
+            }
+          } catch (be) {
+            console.error('Failed to fetch user bookmarks:', be);
+          }
         } else {
-          // Fallback if backend returns a string
           setUser(USER);
         }
       } catch (error) {
         console.error('Failed to fetch user profile:', error);
-        setUser(USER); // Fallback to mock
+        setUser(USER);
       } finally {
         setLoading(false);
       }
@@ -360,6 +408,9 @@ export function MyPage() {
       await userService.updateMe({ bio: draftBio });
       setBio(draftBio);
       setEditingBio(false);
+      // Reload profile to reflect update
+      const data = await userService.getMe();
+      if (data) setUser(data);
     } catch (error) {
       console.error('Failed to save bio:', error);
       alert('소개 저장에 실패했습니다.');
@@ -371,7 +422,40 @@ export function MyPage() {
     setEditingBio(false);
   };
 
+  const handleRemoveBookmark = async (bookmarkId: number, targetType: string, targetId: number) => {
+    try {
+      const type = targetType.toLowerCase();
+      if (type === 'proof') {
+        await proofService.toggleBookmark(targetId);
+      } else if (type === 'blog') {
+        await blogService.toggleBookmark(targetId);
+      } else if (type === 'question') {
+        await questionService.toggleBookmark(targetId);
+      } else if (type === 'tutorial') {
+        await tutorialService.toggleBookmark(targetId);
+      }
+      setMyBookmarks((prev) => prev.filter((b) => b.id !== bookmarkId));
+    } catch (error) {
+      console.error('Failed to remove bookmark:', error);
+      alert('북마크 제거에 실패했습니다.');
+    }
+  };
+
   const currentUser = user || USER;
+
+  const stats = [
+    { label: '제출한 증명', value: currentUser.statProofs || 0, icon: BookOpen },
+    { label: 'Q&A 답변', value: currentUser.statAnswers || 0, icon: MessageSquare },
+    { label: '받은 좋아요', value: currentUser.statLikes || 0, icon: Heart },
+    { label: '기여 포인트', value: (currentUser.statPoints || 0).toLocaleString(), icon: Award },
+  ];
+
+  const tabs = [
+    { id: 'proofs', label: '내 증명', count: myProofs.length },
+    { id: 'qna', label: '활동 내역', count: myActivities.length },
+    { id: 'bookmarks', label: '북마크', count: myBookmarks.length },
+    { id: 'settings', label: '설정', count: null },
+  ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
@@ -385,14 +469,14 @@ export function MyPage() {
       >
         {/* 아바타 */}
         <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 select-none">
-          {currentUser.name[0]}
+          {(currentUser.name || 'U')[0]}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap mb-1">
             <h1 className="text-xl font-bold text-gray-900">{currentUser.name}</h1>
             <span className="text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
-              {currentUser.system || 'Lean 4'}
+              {currentUser.preferredSystem || currentUser.system || 'Lean 4'}
             </span>
           </div>
           <p className="text-sm text-gray-500 mb-2">{currentUser.email}</p>
@@ -447,7 +531,7 @@ export function MyPage() {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="grid grid-cols-4 gap-3 mb-8"
       >
-        {STATS.map((stat, i) => (
+        {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 8 }}
@@ -469,7 +553,7 @@ export function MyPage() {
         transition={{ delay: 0.2 }}
       >
         <div className="flex border-b border-gray-200 mb-6 gap-1">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -503,9 +587,9 @@ export function MyPage() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'proofs' && <ProofsTab />}
-            {activeTab === 'qna' && <QnATab />}
-            {activeTab === 'bookmarks' && <BookmarksTab />}
+            {activeTab === 'proofs' && <ProofsTab proofs={myProofs} />}
+            {activeTab === 'qna' && <QnATab activities={myActivities} />}
+            {activeTab === 'bookmarks' && <BookmarksTab bookmarks={myBookmarks} onRemove={handleRemoveBookmark} />}
             {activeTab === 'settings' && <SettingsTab />}
           </motion.div>
         </AnimatePresence>

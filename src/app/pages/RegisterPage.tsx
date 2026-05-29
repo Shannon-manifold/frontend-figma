@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router';
 import { Eye, EyeOff, Github, Check, ChevronDown, RefreshCw, Copy, CheckCheck } from 'lucide-react';
+import { authService } from '../services/authService';
 
 const PROOF_SYSTEMS = ['Lean 4', 'Coq', 'Isabelle', 'Agda', '아직 모름'];
 
@@ -87,11 +88,24 @@ export function RegisterPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); setStep('done'); }, 1500);
+    try {
+      await authService.register({
+        name: form.name,
+        nickname: form.name,
+        email: form.email,
+        password: form.password,
+      });
+      setStep('done');
+    } catch (error: any) {
+      console.error('Failed to register:', error);
+      alert(error.message || '회원가입에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

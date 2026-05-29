@@ -1,6 +1,14 @@
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
+}
+
+export interface RegisterResponse {
+  userId: number;
+  email: string;
+  nickname: string;
 }
 
 export interface User {

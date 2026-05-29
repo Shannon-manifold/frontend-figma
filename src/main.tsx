@@ -12,6 +12,7 @@ async function autoLogin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: '테스트',
+          nickname: '테스트',
           email: 'test@shannonmanifold.io',
           password: 'password123'
         })

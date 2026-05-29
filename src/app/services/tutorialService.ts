@@ -18,5 +18,11 @@ export const tutorialService = {
     await fetcher(`/api/tutorials/${tutorialId}/steps/${stepId}/complete`, {
       method: 'POST',
     });
+  },
+
+  async toggleBookmark(tutorialId: number): Promise<string> {
+    return fetcher<string>(`/api/tutorials/${tutorialId}/bookmarks`, {
+      method: 'POST',
+    });
   }
 };

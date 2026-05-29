@@ -14,5 +14,11 @@ export const blogService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  async toggleBookmark(id: number): Promise<string> {
+    return fetcher<string>(`/api/v1/blogs/${id}/bookmarks`, {
+      method: 'POST',
+    });
   }
 };
