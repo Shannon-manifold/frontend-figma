@@ -1,9 +1,9 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
 import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag, Loader2 } from "lucide-react";
-import { getQuestionById } from "../data/questions";
 import { useEffect, useState } from "react";
 import { questionService } from "../services/questionService";
+import { userService } from "../services/userService";
 
 function renderContent(text: string): string {
   let html = text;
@@ -31,6 +31,19 @@ export function QnADetailPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [answerContent, setAnswerContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await userService.getMe();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Failed to get current user:", err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,14 +51,14 @@ export function QnADetailPage() {
       setLoading(true);
       try {
         const data = await questionService.getQuestionDetail(Number(questionId));
-        if (data && typeof data === 'object' && data.id) {
+        if (data && typeof data === 'object') {
           setRawQuestion(data);
         } else {
-          setRawQuestion(getQuestionById(Number(questionId)));
+          setRawQuestion(null);
         }
       } catch (error) {
         console.error("Failed to fetch question detail:", error);
-        setRawQuestion(getQuestionById(Number(questionId)));
+        setRawQuestion(null);
       } finally {
         setLoading(false);
       }
@@ -62,6 +75,7 @@ export function QnADetailPage() {
     title: rawQuestion.title,
     description: rawQuestion.description,
     author: rawQuestion.authorName || rawQuestion.author || "Anonymous",
+    authorId: rawQuestion.authorId,
     date: rawQuestion.date,
     views: rawQuestion.views || 0,
     answers: rawQuestion.answersCount !== undefined ? rawQuestion.answersCount : (Array.isArray(rawQuestion.answers) ? rawQuestion.answers.length : (rawQuestion.answers || 0)),
@@ -115,6 +129,40 @@ export function QnADetailPage() {
       alert("답변 등록에 실패했습니다. 로그인 상태를 확인해주세요.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAcceptAnswer = async (answerId: number) => {
+    if (!question) return;
+    try {
+      await questionService.acceptAnswer(answerId);
+      alert("답변이 채택되었습니다.");
+      const updated = await questionService.getQuestionDetail(question.id);
+      setRawQuestion(updated);
+    } catch (error: any) {
+      console.error("Failed to accept answer:", error);
+      alert(error.message || "답변 채택에 실패했습니다.");
+    }
+  };
+
+  const handleAnswerLike = async (answerId: number) => {
+    if (!question) return;
+    try {
+      const newLikes = await questionService.toggleAnswerLike(answerId);
+      setRawQuestion((prev: any) => {
+        if (!prev) return prev;
+        const targetList = Array.isArray(prev.answers) ? prev.answers : (prev.answerList || []);
+        const updatedAnswers = targetList.map((a: any) => 
+          a.id === answerId ? { ...a, likes: newLikes } : a
+        );
+        return {
+          ...prev,
+          answers: Array.isArray(prev.answers) ? updatedAnswers : prev.answers,
+          answerList: Array.isArray(prev.answerList) ? updatedAnswers : prev.answerList
+        };
+      });
+    } catch (error) {
+      console.error("Failed to toggle answer like:", error);
     }
   };
 
@@ -255,15 +303,32 @@ export function QnADetailPage() {
                     <div className="prose-sm" dangerouslySetInnerHTML={{ __html: renderContent(answer.content) }} />
 
                     {/* Answer actions */}
-                    <div className="flex items-center gap-3 mt-5 pt-4 border-t border-gray-100">
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
-                        <ThumbsUp className="w-3.5 h-3.5" />{answer.likes}
-                      </motion.button>
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
-                        <MessageCircle className="w-3.5 h-3.5" />댓글
-                      </motion.button>
+                    <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleAnswerLike(answer.id)}
+                          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />{answer.likes}
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
+                          <MessageCircle className="w-3.5 h-3.5" />댓글
+                        </motion.button>
+                      </div>
+
+                      {currentUser && currentUser.id === question.authorId && question.status !== 'answered' && !answer.accepted && (
+                        <motion.button
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleAcceptAnswer(answer.id)}
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+                        >
+                          답변 채택하기
+                        </motion.button>
+                      )}
                     </div>
                   </div>
                 </motion.div>

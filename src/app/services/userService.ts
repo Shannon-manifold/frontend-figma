@@ -27,6 +27,12 @@ export const userService = {
 
   async getUserProfile(userId: number): Promise<any> {
     return fetcher(`/api/v1/users/${userId}`);
+  },
+
+  async deleteMe(): Promise<void> {
+    await fetcher('/api/v1/users/me', {
+      method: 'DELETE',
+    });
   }
 };
 

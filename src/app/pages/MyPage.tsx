@@ -225,7 +225,15 @@ function BookmarksTab({
   );
 }
 
-function SettingsTab() {
+function SettingsTab({
+  user,
+  onLogout,
+  onDeleteAccount
+}: {
+  user: any;
+  onLogout: () => void;
+  onDeleteAccount: () => void;
+}) {
   const [notifications, setNotifications] = useState({
     email: true,
     answer: true,
@@ -233,8 +241,22 @@ function SettingsTab() {
     challenge: true,
   });
 
-  const toggle = (key: keyof typeof notifications) =>
-    setNotifications((n) => ({ ...n, [key]: !n[key] }));
+  useEffect(() => {
+    if (user && user.notifications) {
+      setNotifications(user.notifications);
+    }
+  }, [user]);
+
+  const toggle = async (key: keyof typeof notifications) => {
+    const nextVal = !notifications[key];
+    const updatedNotifs = { ...notifications, [key]: nextVal };
+    setNotifications(updatedNotifs);
+    try {
+      await userService.updateMe({ notifications: updatedNotifs });
+    } catch (err) {
+      console.error("Failed to update notification settings:", err);
+    }
+  };
 
   const NOTIF_ITEMS = [
     { key: 'email' as const, label: '이메일 알림', desc: '서비스 공지 및 주요 알림' },
@@ -300,18 +322,18 @@ function SettingsTab() {
           <Trash2 className="w-4 h-4 text-gray-500" />
           <h3 className="text-sm font-semibold text-gray-900">계정</h3>
         </div>
-        <Link to="/">
-          <motion.div
-            whileHover={{ x: 2 }}
-            className="flex items-center justify-between py-2.5 px-3 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer mb-2"
-          >
-            <span className="flex items-center gap-2"><LogOut className="w-4 h-4" />로그아웃</span>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </motion.div>
-        </Link>
         <motion.button
           whileHover={{ x: 2 }}
-          className="w-full flex items-center justify-between py-2.5 px-3 border border-red-200 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+          onClick={onLogout}
+          className="w-full flex items-center justify-between py-2.5 px-3 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer mb-2"
+        >
+          <span className="flex items-center gap-2"><LogOut className="w-4 h-4" />로그아웃</span>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </motion.button>
+        <motion.button
+          whileHover={{ x: 2 }}
+          onClick={onDeleteAccount}
+          className="w-full flex items-center justify-between py-2.5 px-3 border border-red-200 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left"
         >
           <span className="flex items-center gap-2"><Trash2 className="w-4 h-4" />계정 삭제</span>
           <ChevronRight className="w-4 h-4 text-red-400" />
@@ -403,12 +425,32 @@ export function MyPage() {
     );
   }
 
+  const handleLogout = () => {
+    authService.logout();
+    alert('로그아웃 되었습니다.');
+    navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+    try {
+      await userService.deleteMe();
+      authService.logout();
+      alert('계정이 성공적으로 삭제되었습니다.');
+      navigate('/');
+    } catch (err: any) {
+      console.error('Failed to delete account:', err);
+      alert(err.message || '계정 삭제에 실패했습니다.');
+    }
+  };
+
   const saveBio = async () => {
     try {
       await userService.updateMe({ bio: draftBio });
       setBio(draftBio);
       setEditingBio(false);
-      // Reload profile to reflect update
       const data = await userService.getMe();
       if (data) setUser(data);
     } catch (error) {
@@ -590,7 +632,13 @@ export function MyPage() {
             {activeTab === 'proofs' && <ProofsTab proofs={myProofs} />}
             {activeTab === 'qna' && <QnATab activities={myActivities} />}
             {activeTab === 'bookmarks' && <BookmarksTab bookmarks={myBookmarks} onRemove={handleRemoveBookmark} />}
-            {activeTab === 'settings' && <SettingsTab />}
+            {activeTab === 'settings' && (
+              <SettingsTab
+                user={currentUser}
+                onLogout={handleLogout}
+                onDeleteAccount={handleDeleteAccount}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </motion.div>

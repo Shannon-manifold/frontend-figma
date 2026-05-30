@@ -174,3 +174,12 @@ export interface NotificationResponse {
   read: boolean;
 }
 
+export interface CommentResponse {
+  id: number;
+  proofId: number;
+  authorId: number;
+  authorName: string;
+  content: string;
+  date: string;
+}
+

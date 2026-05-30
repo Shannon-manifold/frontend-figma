@@ -3,11 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import "./styles/index.css";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 async function autoLogin() {
   if (!localStorage.getItem('accessToken')) {
     try {
       // Attempt to register a default test user (silently catch if they already exist)
-      await fetch('http://localhost:8080/api/v1/auth/register', {
+      await fetch(`${BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -19,7 +21,7 @@ async function autoLogin() {
       }).catch(() => {});
 
       // Login to get a valid signed JWT from the backend
-      const response = await fetch('http://localhost:8080/api/v1/auth/login', {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

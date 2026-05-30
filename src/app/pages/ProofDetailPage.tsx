@@ -21,6 +21,8 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { proofService } from "../services/proofService";
 import { userService } from "../services/userService";
+import { authService } from "../services/authService";
+import { CommentResponse } from "../services/types";
 
 function renderLatex(latex: string): string {
   // Split by display math ($$...$$), then process inline math ($...$)
@@ -71,66 +73,125 @@ function processInlineMath(text: string): string {
 }
 
 function processLatexToHtml(latex: string): string {
-  let html = latex;
+  if (!latex) return "";
+  
+  // 1. Temporarily extract LaTeX math environments to protect them from Markdown processing
+  const mathBlocks: string[] = [];
+  let blockId = 0;
+  
+  // Align environment (specific to display math)
+  let processed = latex.replace(/\\begin\{align\*?\}([\s\S]*?)\\end\{align\*?\}/g, (_, content) => {
+    let rendered = "";
+    try {
+      rendered = katex.renderToString(
+        `\\begin{aligned}${content.trim()}\\end{aligned}`,
+        { displayMode: true, throwOnError: false, trust: true }
+      );
+    } catch {
+      rendered = `<pre class="overflow-x-auto">${content}</pre>`;
+    }
+    const placeholder = `<!--MATHBLOCK_${blockId}-->`;
+    mathBlocks.push(rendered);
+    blockId++;
+    return placeholder;
+  });
 
-  // Remove \section*, \textbf headers → <h3>
-  html = html.replace(/\\section\*?\{(.+?)\}/g, "");
+  // Display math $$...$$
+  processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+    let rendered = "";
+    try {
+      rendered = katex.renderToString(math.trim(), {
+        displayMode: true,
+        throwOnError: false,
+        trust: true
+      });
+    } catch {
+      rendered = `<pre class="overflow-x-auto text-red-500">${math}</pre>`;
+    }
+    const placeholder = `<!--MATHBLOCK_${blockId}-->`;
+    mathBlocks.push(rendered);
+    blockId++;
+    return placeholder;
+  });
 
-  // \textbf{...} → <strong>
-  html = html.replace(/\\textbf\{([^}]+)\}/g, "<strong>$1</strong>");
-  // \textit{...} → <em>
-  html = html.replace(/\\textit\{([^}]+)\}/g, "<em>$1</em>");
-  // \text{...} → <span>
-  html = html.replace(/\\text\{([^}]+)\}/g, "<span>$1</span>");
+  // Inline math $...$
+  processed = processed.replace(/\$([^$]+?)\$/g, (_, math) => {
+    let rendered = "";
+    try {
+      rendered = katex.renderToString(math.trim(), {
+        displayMode: false,
+        throwOnError: false,
+        trust: true
+      });
+    } catch {
+      rendered = `<code class="text-red-500">${math}</code>`;
+    }
+    const placeholder = `<!--MATHBLOCK_${blockId}-->`;
+    mathBlocks.push(rendered);
+    blockId++;
+    return placeholder;
+  });
 
-  // \begin{proof}...\end{proof}
-  html = html.replace(/\\begin\{proof\}/g, '<div class="proof-block">');
-  html = html.replace(/\\end\{proof\}/g, "</div>");
-
-  // \begin{enumerate}...\end{enumerate}
-  html = html.replace(/\\begin\{enumerate\}/g, '<ol class="latex-enumerate">');
-  html = html.replace(/\\end\{enumerate\}/g, "</ol>");
-
-  // \begin{itemize}...\end{itemize}
-  html = html.replace(/\\begin\{itemize\}/g, '<ul class="latex-itemize">');
-  html = html.replace(/\\end\{itemize\}/g, "</ul>");
-
-  // \item
-  html = html.replace(/\\item\s/g, "<li>");
-
-  // \begin{align*}...\end{align*}
+  // 2. Apply Markdown parsing on the remaining parts
+  let html = processed;
+  // h3
+  html = html.replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold text-gray-900 mt-6 mb-2">$1</h3>');
+  // h2
+  html = html.replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-gray-900 mt-8 mb-3">$1</h2>');
+  // bold
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // inline code
+  html = html.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-gray-100 rounded text-sm font-mono text-indigo-700">$1</code>');
+  // code blocks
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_m, _lang, code) =>
+    `<pre class="bg-gray-900 text-gray-200 rounded-lg p-5 overflow-x-auto text-sm leading-relaxed my-4 font-mono">${code.trim()}</pre>`
+  );
+  // table
   html = html.replace(
-    /\\begin\{align\*?\}([\s\S]*?)\\end\{align\*?\}/g,
-    (_, content) => {
-      // Convert align to gathered for KaTeX (simpler)
-      const cleaned = content
-        .replace(/&/g, "")
-        .replace(/\\\\/g, "\\\\")
-        .replace(/&&\s*\\text\{[^}]*\}/g, "")
-        .trim();
-      try {
-        return katex.renderToString(
-          `\\begin{aligned}${content.trim()}\\end{aligned}`,
-          { displayMode: true, throwOnError: false, trust: true }
-        );
-      } catch {
-        return `<pre>${content}</pre>`;
-      }
+    /\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)+)/g,
+    (_m, headerRow: string, bodyRows: string) => {
+      const headers = headerRow.split("|").map((h: string) => h.trim()).filter(Boolean);
+      const rows = bodyRows.trim().split("\n").map((row: string) =>
+        row.split("|").map((c: string) => c.trim()).filter(Boolean)
+      );
+      return `<div class="overflow-x-auto my-4"><table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead><tr class="bg-gray-50">${headers.map((h: string) => `<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200">${h}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map((row: string[]) => `<tr class="border-b border-gray-100">${row.map((c: string) => `<td class="px-4 py-2 text-gray-600">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div>`;
     }
   );
+  // unordered list
+  html = html.replace(/^- (.+)$/gm, '<li class="ml-5 list-disc text-gray-600 mb-1">$1</li>');
+  html = html.replace(/(<li[^>]*>.*<\/li>\n?)+/g, (match) => `<ul class="my-2">${match}</ul>`);
+  // numbered list
+  html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-5 list-decimal text-gray-600 mb-1">$1</li>');
 
-  // \qed → ∎
-  html = html.replace(/\\qed/g, '<span class="qed">∎</span>');
-
-  // Line breaks
+  // LaTeX specific blocks
+  html = html.replace(/\\section\*?\{(.+?)\}/g, "");
+  html = html.replace(/\\textbf\{([^}]+)\}/g, "<strong>$1</strong>");
+  html = html.replace(/\\textit\{([^}]+)\}/g, "<em>$1</em>");
+  html = html.replace(/\\text\{([^}]+)\}/g, "<span>$1</span>");
+  html = html.replace(/\\begin\{proof\}/g, '<div class="proof-block border-l-2 border-indigo-500 pl-4 py-1 my-3 bg-gray-50/50 rounded-r-lg">');
+  html = html.replace(/\\end\{proof\}/g, "</div>");
+  html = html.replace(/\\begin\{enumerate\}/g, '<ol class="latex-enumerate list-decimal pl-6 space-y-1 my-3 text-gray-600">');
+  html = html.replace(/\\end\{enumerate\}/g, "</ol>");
+  html = html.replace(/\\begin\{itemize\}/g, '<ul class="latex-itemize list-disc pl-6 space-y-1 my-3 text-gray-600">');
+  html = html.replace(/\\end\{itemize\}/g, "</ul>");
+  html = html.replace(/\\item\s/g, "<li>");
+  html = html.replace(/\\qed/g, '<span class="qed float-right font-serif font-bold text-indigo-600">∎</span>');
   html = html.replace(/\\\\/g, "<br />");
 
-  // Render remaining math
-  html = renderLatex(html);
+  // paragraphs
+  html = html.split("\n\n").map((block) => {
+    const trimmed = block.trim();
+    if (!trimmed || trimmed.startsWith("<h") || trimmed.startsWith("<pre") || trimmed.startsWith("<ul") || trimmed.startsWith("<ol") || trimmed.startsWith("<div") || trimmed.startsWith("<li")) return trimmed;
+    return `<p class="text-gray-600 leading-relaxed mb-4">${trimmed}</p>`;
+  }).join("\n");
 
-  // Double newlines → paragraphs
-  html = html.replace(/\n\n+/g, '</p><p class="latex-paragraph">');
-  html = `<p class="latex-paragraph">${html}</p>`;
+  // 3. Restore the math blocks
+  for (let i = 0; i < mathBlocks.length; i++) {
+    html = html.replace(`<!--MATHBLOCK_${i}-->`, mathBlocks[i]);
+  }
 
   return html;
 }
@@ -196,7 +257,41 @@ export function ProofDetailPage() {
   const [verifying, setVerifying] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [comments, setComments] = useState<CommentResponse[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const fetchComments = async () => {
+    if (!proofId) return;
+    try {
+      const data = await proofService.getComments(Number(proofId));
+      setComments(data);
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    }
+  };
+
+  const handleCommentSubmit = async () => {
+    if (!commentInput.trim()) return;
+    if (!authService.isAuthenticated()) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate(`/login?redirect=/proofs/${proofId}`);
+      return;
+    }
+    setSubmittingComment(true);
+    try {
+      await proofService.createComment(Number(proofId), commentInput);
+      setCommentInput("");
+      await fetchComments();
+    } catch (err) {
+      console.error("Failed to post comment:", err);
+      alert("댓글 등록에 실패했습니다.");
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -219,6 +314,7 @@ export function ProofDetailPage() {
     };
     
     loadData();
+    fetchComments();
   }, [proofId]);
 
   useEffect(() => {
@@ -517,7 +613,7 @@ export function ProofDetailPage() {
             >
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="text-base font-semibold text-gray-900">
-                  댓글 {proof.comments ?? proof.commentsCount ?? 0}
+                  댓글 {comments.length}
                 </h2>
               </div>
 
@@ -530,6 +626,9 @@ export function ProofDetailPage() {
                   <div className="flex-1">
                     <textarea
                       placeholder="댓글을 남겨보세요..."
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      disabled={submittingComment}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-shadow"
                       rows={2}
                     />
@@ -537,45 +636,53 @@ export function ProofDetailPage() {
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
+                        onClick={handleCommentSubmit}
+                        disabled={submittingComment}
+                        className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[60px]"
                       >
-                        등록
+                        {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : "등록"}
                       </motion.button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Sample comments */}
+              {/* Real comments */}
               <div className="divide-y divide-gray-50">
-                {sampleComments.map((comment, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35 + i * 0.05 }}
-                    className="px-6 py-4"
-                  >
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                        {comment.avatar}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-900">
-                            {comment.author}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {comment.time}
-                          </span>
+                {comments.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-sm text-gray-400">
+                    첫 번째 댓글을 남겨보세요.
+                  </div>
+                ) : (
+                  comments.map((comment, i) => (
+                    <motion.div
+                      key={comment.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 + i * 0.05 }}
+                      className="px-6 py-4"
+                    >
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
                         </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          {comment.text}
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              {comment.authorName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {comment.date}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {comment.content}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -611,7 +718,7 @@ export function ProofDetailPage() {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   <MessageSquare className="w-4 h-4" />
-                  {proof.comments ?? proof.commentsCount ?? 0}
+                  {comments.length}
                 </motion.button>
               </div>
             </div>

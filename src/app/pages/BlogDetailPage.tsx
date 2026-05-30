@@ -4,9 +4,54 @@ import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmar
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { useEffect, useState } from "react";
 import { blogService } from "../services/blogService";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 function renderMarkdown(md: string): string {
-  let html = md;
+  if (!md) return "";
+  
+  // 1. Temporarily extract LaTeX math environments to protect them from Markdown processing
+  const mathBlocks: string[] = [];
+  let blockId = 0;
+  
+  // Display math $$...$$
+  let processed = md.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+    let rendered = "";
+    try {
+      rendered = katex.renderToString(math.trim(), {
+        displayMode: true,
+        throwOnError: false,
+        trust: true
+      });
+    } catch {
+      rendered = `<pre class="overflow-x-auto text-red-500">${math}</pre>`;
+    }
+    const placeholder = `<!--MATHBLOCK_${blockId}-->`;
+    mathBlocks.push(rendered);
+    blockId++;
+    return placeholder;
+  });
+
+  // Inline math $...$
+  processed = processed.replace(/\$([^$]+?)\$/g, (_, math) => {
+    let rendered = "";
+    try {
+      rendered = katex.renderToString(math.trim(), {
+        displayMode: false,
+        throwOnError: false,
+        trust: true
+      });
+    } catch {
+      rendered = `<code class="text-red-500">${math}</code>`;
+    }
+    const placeholder = `<!--MATHBLOCK_${blockId}-->`;
+    mathBlocks.push(rendered);
+    blockId++;
+    return placeholder;
+  });
+
+  // 2. Apply Markdown parsing on the remaining parts
+  let html = processed;
   // h3
   html = html.replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold text-gray-900 mt-6 mb-2">$1</h3>');
   // h2
@@ -44,6 +89,11 @@ function renderMarkdown(md: string): string {
     if (!trimmed || trimmed.startsWith("<h") || trimmed.startsWith("<pre") || trimmed.startsWith("<ul") || trimmed.startsWith("<ol") || trimmed.startsWith("<div") || trimmed.startsWith("<li")) return trimmed;
     return `<p class="text-gray-600 leading-relaxed mb-4">${trimmed}</p>`;
   }).join("\n");
+
+  // 3. Restore the math blocks
+  for (let i = 0; i < mathBlocks.length; i++) {
+    html = html.replace(`<!--MATHBLOCK_${i}-->`, mathBlocks[i]);
+  }
 
   return html;
 }

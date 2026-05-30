@@ -1,5 +1,5 @@
 import { fetcher } from './api';
-import { ProofResponse, ProofDetailResponse } from './types';
+import { ProofResponse, ProofDetailResponse, CommentResponse } from './types';
 
 export const proofService = {
   async getAllProofs(): Promise<ProofResponse[]> {
@@ -45,6 +45,17 @@ export const proofService = {
   async verifyProof(id: number): Promise<ProofDetailResponse> {
     return fetcher<ProofDetailResponse>(`/api/proofs/${id}/verify`, {
       method: 'POST',
+    });
+  },
+
+  async getComments(proofId: number): Promise<CommentResponse[]> {
+    return fetcher<CommentResponse[]>(`/api/proofs/${proofId}/comments`);
+  },
+
+  async createComment(proofId: number, content: string): Promise<CommentResponse> {
+    return fetcher<CommentResponse>(`/api/proofs/${proofId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
     });
   }
 };
