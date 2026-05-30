@@ -1,5 +1,5 @@
 import { fetcher } from './api';
-import { QuestionResponse, QuestionDetailResponse, AnswerResponse } from './types';
+import { QuestionResponse, QuestionDetailResponse, AnswerResponse, CommentResponse } from './types';
 
 export const questionService = {
   async getQuestions(): Promise<QuestionResponse[]> {
@@ -58,6 +58,17 @@ export const questionService = {
   async toggleBookmark(questionId: number): Promise<string> {
     return fetcher<string>(`/api/v1/questions/${questionId}/bookmarks`, {
       method: 'POST',
+    });
+  },
+
+  async getAnswerComments(answerId: number): Promise<CommentResponse[]> {
+    return fetcher<CommentResponse[]>(`/api/v1/questions/answers/${answerId}/comments`);
+  },
+
+  async createAnswerComment(answerId: number, content: string): Promise<CommentResponse> {
+    return fetcher<CommentResponse>(`/api/v1/questions/answers/${answerId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
     });
   }
 };

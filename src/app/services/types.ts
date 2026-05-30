@@ -230,7 +230,9 @@ export interface NotificationResponse {
 
 export interface CommentResponse {
   id: number;
-  proofId: number;
+  proofId?: number;
+  blogId?: number;
+  answerId?: number;
   authorId: number;
   authorName: string;
   content: string;

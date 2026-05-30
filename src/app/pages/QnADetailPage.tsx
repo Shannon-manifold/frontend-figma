@@ -1,9 +1,11 @@
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { questionService } from "../services/questionService";
 import { userService } from "../services/userService";
+import { authService } from "../services/authService";
+import { CommentResponse } from "../services/types";
 
 function renderContent(text: string): string {
   let html = text;
@@ -25,6 +27,7 @@ function renderContent(text: string): string {
 
 export function QnADetailPage() {
   const { questionId } = useParams();
+  const navigate = useNavigate();
   const [rawQuestion, setRawQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
@@ -32,6 +35,48 @@ export function QnADetailPage() {
   const [answerContent, setAnswerContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const [activeAnswerId, setActiveAnswerId] = useState<number | null>(null);
+  const [activeAnswerComments, setActiveAnswerComments] = useState<CommentResponse[]>([]);
+  const [answerCommentInput, setAnswerCommentInput] = useState("");
+  const [submittingAnswerComment, setSubmittingAnswerComment] = useState(false);
+
+  const handleToggleComments = async (answerId: number) => {
+    if (activeAnswerId === answerId) {
+      setActiveAnswerId(null);
+      setActiveAnswerComments([]);
+    } else {
+      setActiveAnswerId(answerId);
+      setActiveAnswerComments([]);
+      try {
+        const data = await questionService.getAnswerComments(answerId);
+        setActiveAnswerComments(data);
+      } catch (err) {
+        console.error("Failed to fetch answer comments:", err);
+      }
+    }
+  };
+
+  const handleAnswerCommentSubmit = async (answerId: number) => {
+    if (!answerCommentInput.trim()) return;
+    if (!authService.isAuthenticated()) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate(`/login?redirect=/qna/${questionId}`);
+      return;
+    }
+    setSubmittingAnswerComment(true);
+    try {
+      await questionService.createAnswerComment(answerId, answerCommentInput);
+      setAnswerCommentInput("");
+      const data = await questionService.getAnswerComments(answerId);
+      setActiveAnswerComments(data);
+    } catch (err) {
+      console.error("Failed to post answer comment:", err);
+      alert("댓글 등록에 실패했습니다.");
+    } finally {
+      setSubmittingAnswerComment(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -313,8 +358,12 @@ export function QnADetailPage() {
                         >
                           <ThumbsUp className="w-3.5 h-3.5" />{answer.likes}
                         </motion.button>
-                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleToggleComments(answer.id)}
+                          className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${activeAnswerId === answer.id ? "text-indigo-600" : "text-gray-500 hover:text-indigo-600"}`}
+                        >
                           <MessageCircle className="w-3.5 h-3.5" />댓글
                         </motion.button>
                       </div>
@@ -331,6 +380,63 @@ export function QnADetailPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Comments for this Answer */}
+                  {activeAnswerId === answer.id && (
+                    <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 space-y-4">
+                      {/* Comment Input */}
+                      <div className="flex gap-3">
+                        <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold flex-shrink-0">
+                          U
+                        </div>
+                        <div className="flex-1 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="댓글을 남겨보세요..."
+                            value={answerCommentInput}
+                            onChange={(e) => setAnswerCommentInput(e.target.value)}
+                            disabled={submittingAnswerComment}
+                            className="flex-1 border border-gray-200 rounded-lg px-3 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleAnswerCommentSubmit(answer.id)}
+                            disabled={submittingAnswerComment || !answerCommentInput.trim()}
+                            className="px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[50px]"
+                          >
+                            {submittingAnswerComment ? <Loader2 className="w-3 h-3 animate-spin" /> : "등록"}
+                          </motion.button>
+                        </div>
+                      </div>
+
+                      {/* Comment List */}
+                      <div className="space-y-3">
+                        {activeAnswerComments.length === 0 ? (
+                          <div className="text-center text-xs text-gray-400 py-2">
+                            아직 댓글이 없습니다.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {activeAnswerComments.map((comment) => (
+                              <div key={comment.id} className="flex gap-2.5 text-sm pl-2">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5">
+                                  {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="text-xs font-medium text-gray-800">{comment.authorName}</span>
+                                    <span className="text-[10px] text-gray-400">{comment.date}</span>
+                                  </div>
+                                  <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>

@@ -1,5 +1,5 @@
 import { fetcher } from './api';
-import { BlogPostResponse, BlogPostDetailResponse } from './types';
+import { BlogPostResponse, BlogPostDetailResponse, CommentResponse } from './types';
 
 export const blogService = {
   async getBlogs(): Promise<BlogPostResponse[]> {
@@ -20,6 +20,17 @@ export const blogService = {
   async toggleBookmark(id: number): Promise<string> {
     return fetcher<string>(`/api/v1/blogs/${id}/bookmarks`, {
       method: 'POST',
+    });
+  },
+
+  async getComments(blogId: number): Promise<CommentResponse[]> {
+    return fetcher<CommentResponse[]>(`/api/v1/blogs/${blogId}/comments`);
+  },
+
+  async createComment(blogId: number, content: string): Promise<CommentResponse> {
+    return fetcher<CommentResponse>(`/api/v1/blogs/${blogId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
     });
   }
 };
