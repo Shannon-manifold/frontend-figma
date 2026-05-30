@@ -13,10 +13,47 @@ export interface RegisterResponse {
 
 export interface User {
   id: number;
-  email: string;
   name: string;
+  email: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  preferredSystem?: string | null;
+  joinDate?: string;
+  role: 'member' | 'moderator' | 'admin';
+  statProofs?: number;
+  statAnswers?: number;
+  statLikes?: number;
+  statPoints?: number;
+  notiEmail?: boolean;
+  notiAnswer?: boolean;
+  notiLike?: boolean;
+  notiChallenge?: boolean;
+}
+
+export interface UserResponse {
+  id: number;
+  name: string;
+  email: string;
   role: string;
-  avatar?: string;
+  badge: string;
+  initial: string;
+  field: string;
+  proofs: number;
+  answers: number;
+  reputation: string;
+  joinDate: string;
+  bio: string;
+  languages: string[];
+  achievements: {
+    icon: string;
+    title: string;
+    desc: string;
+  }[];
+  recentActivity: {
+    type: string;
+    title: string;
+    date: string;
+  }[];
 }
 
 export interface ProofResponse {
@@ -86,13 +123,28 @@ export interface TutorialDetailResponse {
   steps: TutorialStepResponse[];
 }
 
-export interface BlogResponse {
+export interface BlogPostResponse {
   id: number;
   title: string;
-  content: string;
-  summary: string;
+  excerpt: string;
   authorName: string;
-  createdAt: string;
+  date: string;
+  readTime: string;
+  category: string;
+  imageUrl: string;
+}
+
+export interface BlogPostDetailResponse {
+  id: number;
+  title: string;
+  excerpt: string;
+  authorId: number;
+  authorName: string;
+  date: string;
+  readTime: string;
+  category: string;
+  imageUrl: string;
+  content: string;
 }
 
 export interface AnswerResponse {
@@ -169,9 +221,11 @@ export interface NotificationResponse {
   id: number;
   type: 'verified' | 'answer' | 'like' | 'challenge';
   title: string;
-  body: string;
-  time: string;
-  read: boolean;
+  message: string;
+  targetType?: string;
+  targetId?: number;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface CommentResponse {
@@ -181,5 +235,10 @@ export interface CommentResponse {
   authorName: string;
   content: string;
   date: string;
+}
+
+export interface VerifyResponse {
+  verified: boolean;
+  output: string;
 }
 

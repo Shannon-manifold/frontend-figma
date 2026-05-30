@@ -4,12 +4,13 @@ import { ImageWithFallback } from '../components/ImageWithFallback';
 import { Link } from 'react-router';
 import { blogService } from '../services/blogService';
 import { useState, useEffect } from 'react';
+import { BlogPostResponse } from '../services/types';
 
 const weierstrassPortraitUrl =
   'https://commons.wikimedia.org/wiki/Special:FilePath/Karl_Weierstrass.jpg?width=900';
 
 export function BlogPage() {
-  const [blogList, setBlogList] = useState<any[]>([]);
+  const [blogList, setBlogList] = useState<BlogPostResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export function BlogPage() {
                   >
                     <div className="relative h-44 overflow-hidden bg-gray-100">
                       <ImageWithFallback
-                        src={post.image || 'https://via.placeholder.com/400x200'}
+                        src={post.imageUrl || 'https://via.placeholder.com/400x200'}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -126,11 +127,11 @@ export function BlogPage() {
                       <h2 className="text-base font-semibold mb-2 text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
                         {post.title}
                       </h2>
-                      <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{post.excerpt || post.summary}</p>
+                      <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{post.excerpt}</p>
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-xs text-gray-400">
-                          <div className="flex items-center gap-1"><User className="w-3 h-3" /><span>{post.author || post.authorName}</span></div>
+                          <div className="flex items-center gap-1"><User className="w-3 h-3" /><span>{post.authorName}</span></div>
                           <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span>{post.readTime || '5분'}</span></div>
                         </div>
                         <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">

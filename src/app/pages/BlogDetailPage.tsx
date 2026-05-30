@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { blogService } from "../services/blogService";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { BlogPostResponse, BlogPostDetailResponse } from "../services/types";
 
 function renderMarkdown(md: string): string {
   if (!md) return "";
@@ -100,11 +101,11 @@ function renderMarkdown(md: string): string {
 
 export function BlogDetailPage() {
   const { blogId } = useParams();
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<BlogPostDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPostResponse[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -191,7 +192,7 @@ export function BlogDetailPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Hero image */}
           <div className="relative h-64 sm:h-80 rounded-xl overflow-hidden mb-8 bg-gray-100">
-            <ImageWithFallback src={post.image || post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
+            <ImageWithFallback src={post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
             <div className="absolute top-4 left-4">
               <span className="px-3 py-1 bg-white/95 rounded-full text-xs font-medium text-gray-700">{post.category}</span>
             </div>
@@ -204,8 +205,8 @@ export function BlogDetailPage() {
           {/* Meta */}
           <div className="flex items-center gap-4 pb-8 border-b border-gray-200 text-sm text-gray-500">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">{(post.author || post.authorName)?.[0] || '?'}</div>
-              <span className="font-medium text-gray-700">{post.author || post.authorName}</span>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">{post.authorName?.[0] || '?'}</div>
+              <span className="font-medium text-gray-700">{post.authorName}</span>
             </div>
             <span>·</span>
             <div className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{post.date}</div>
@@ -237,7 +238,7 @@ export function BlogDetailPage() {
               {relatedPosts.map((rp) => (
                 <Link key={rp.id} to={`/blog/${rp.id}`} className="group block bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 hover:shadow-md transition-all">
                   <div className="h-32 overflow-hidden bg-gray-100">
-                    <ImageWithFallback src={rp.image} alt={rp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <ImageWithFallback src={rp.imageUrl} alt={rp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                   <div className="p-4">
                     <div className="text-xs text-gray-400 mb-1">{rp.category}</div>

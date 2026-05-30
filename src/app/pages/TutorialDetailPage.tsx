@@ -62,12 +62,12 @@ export function TutorialDetailPage() {
     setIsCorrect(null);
     try {
       const result = await tutorialService.verifyStep(Number(tutorialId), step.id, userCode);
-      if (result && result.success) {
+      if (result && result.verified) {
         setIsCorrect(true);
         await tutorialService.completeStep(Number(tutorialId), step.id);
       } else {
         setIsCorrect(false);
-        setErrorMessage(result?.message || 'Lean 검증에 실패했습니다. 코드를 다시 확인해주세요.');
+        setErrorMessage(result?.output || 'Lean 검증에 실패했습니다. 코드를 다시 확인해주세요.');
       }
     } catch (err: any) {
       console.error('Failed to verify step:', err);

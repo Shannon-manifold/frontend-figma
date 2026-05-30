@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bell, CheckCircle, MessageCircle, Heart, Trophy, X, Check } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { authService } from '../services/authService';
+import { NotificationResponse } from '../services/types';
 
 type Notification = {
   id: number;
@@ -59,7 +60,7 @@ export function NotificationPanel() {
       try {
         const data = await notificationService.getNotifications();
         if (Array.isArray(data)) {
-          const mapped = data.map((n: any) => ({
+          const mapped = data.map((n: NotificationResponse) => ({
             id: n.id,
             type: (n.type || '').toLowerCase() as any,
             title: n.title,

@@ -1,5 +1,5 @@
 import { fetcher } from './api';
-import { TutorialResponse, TutorialDetailResponse } from './types';
+import { TutorialResponse, TutorialDetailResponse, VerifyResponse } from './types';
 
 export const tutorialService = {
   async getAllTutorials(): Promise<TutorialResponse[]> {
@@ -14,8 +14,8 @@ export const tutorialService = {
     return fetcher('/api/users/me/tutorials/progress');
   },
 
-  async verifyStep(tutorialId: number, stepId: number, code: string): Promise<{ success: boolean; message?: string }> {
-    return fetcher<{ success: boolean; message?: string }>(`/api/tutorials/${tutorialId}/steps/${stepId}/verify`, {
+  async verifyStep(tutorialId: number, stepId: number, code: string): Promise<VerifyResponse> {
+    return fetcher<VerifyResponse>(`/api/tutorials/${tutorialId}/steps/${stepId}/verify`, {
       method: 'POST',
       body: JSON.stringify({ code }),
     });

@@ -1,13 +1,13 @@
 import { fetcher } from './api';
-import { User } from './types';
+import { User, UserResponse } from './types';
 
 export const userService = {
   async getMe(): Promise<User> {
     return fetcher<User>('/api/v1/users/me');
   },
 
-  async updateMe(data: any): Promise<User> {
-    return fetcher<User>('/api/v1/users/me', {
+  async updateMe(data: any): Promise<UserResponse> {
+    return fetcher<UserResponse>('/api/v1/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -21,12 +21,12 @@ export const userService = {
     return fetcher('/api/v1/users/me/bookmarks');
   },
 
-  async getContributors(): Promise<any> {
-    return fetcher('/api/v1/users');
+  async getContributors(): Promise<UserResponse[]> {
+    return fetcher<UserResponse[]>('/api/v1/users');
   },
 
-  async getUserProfile(userId: number): Promise<any> {
-    return fetcher(`/api/v1/users/${userId}`);
+  async getUserProfile(userId: number): Promise<UserResponse> {
+    return fetcher<UserResponse>(`/api/v1/users/${userId}`);
   },
 
   async deleteMe(): Promise<void> {
