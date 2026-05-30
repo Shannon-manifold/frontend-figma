@@ -261,6 +261,38 @@ export function ProofDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+
+  const handleCommentEditStart = (commentId: number, content: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(content);
+  };
+
+  const handleCommentEditSave = async (commentId: number) => {
+    if (!editingCommentText.trim()) return;
+    try {
+      await proofService.updateComment(commentId, editingCommentText);
+      setEditingCommentId(null);
+      setEditingCommentText("");
+      await fetchComments();
+    } catch (err) {
+      console.error("Failed to edit comment:", err);
+      alert("댓글 수정에 실패했습니다.");
+    }
+  };
+
+  const handleCommentDelete = async (commentId: number) => {
+    if (!window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) return;
+    try {
+      await proofService.deleteComment(commentId);
+      await fetchComments();
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      alert("댓글 삭제에 실패했습니다.");
+    }
+  };
+
   const contentRef = useRef<HTMLDivElement>(null);
 
   const fetchComments = async () => {
@@ -666,18 +698,46 @@ export function ProofDetailPage() {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                           {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-900">
-                              {comment.authorName}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {comment.date}
-                            </span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                {comment.authorName}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {comment.date}
+                              </span>
+                            </div>
+                            {currentUser && currentUser.id === comment.authorId && (
+                              <div className="flex items-center gap-2 text-xs text-gray-400">
+                                {editingCommentId === comment.id ? (
+                                  <>
+                                    <button onClick={() => handleCommentEditSave(comment.id)} className="hover:text-indigo-600 font-medium cursor-pointer">저장</button>
+                                    <span>·</span>
+                                    <button onClick={() => { setEditingCommentId(null); setEditingCommentText(""); }} className="hover:text-gray-600 font-medium cursor-pointer">취소</button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button onClick={() => handleCommentEditStart(comment.id, comment.content)} className="hover:text-indigo-600 font-medium cursor-pointer">수정</button>
+                                    <span>·</span>
+                                    <button onClick={() => handleCommentDelete(comment.id)} className="hover:text-red-500 font-medium cursor-pointer">삭제</button>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600 leading-relaxed">
-                            {comment.content}
-                          </p>
+                          {editingCommentId === comment.id ? (
+                            <textarea
+                              rows={2}
+                              value={editingCommentText}
+                              onChange={(e) => setEditingCommentText(e.target.value)}
+                              className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none mt-1 bg-white"
+                            />
+                          ) : (
+                            <p className="text-sm text-gray-600 leading-relaxed">
+                              {comment.content}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </motion.div>

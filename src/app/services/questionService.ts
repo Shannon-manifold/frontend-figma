@@ -70,5 +70,31 @@ export const questionService = {
       method: 'POST',
       body: JSON.stringify({ content }),
     });
+  },
+
+  async updateAnswer(answerId: number, content: string): Promise<AnswerResponse> {
+    return fetcher<AnswerResponse>(`/api/v1/questions/answers/${answerId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  async deleteAnswer(answerId: number): Promise<void> {
+    await fetcher(`/api/v1/questions/answers/${answerId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async updateAnswerComment(commentId: number, content: string): Promise<CommentResponse> {
+    return fetcher<CommentResponse>(`/api/v1/questions/answers/comments/${commentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  async deleteAnswerComment(commentId: number): Promise<void> {
+    await fetcher(`/api/v1/questions/answers/comments/${commentId}`, {
+      method: 'DELETE',
+    });
   }
 };

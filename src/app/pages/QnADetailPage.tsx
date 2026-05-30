@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, ThumbsUp, Eye, Calendar, CheckCircle, ChevronUp, Share2, Bookmark, Tag, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { questionService } from "../services/questionService";
 import { userService } from "../services/userService";
@@ -40,6 +40,87 @@ export function QnADetailPage() {
   const [activeAnswerComments, setActiveAnswerComments] = useState<CommentResponse[]>([]);
   const [answerCommentInput, setAnswerCommentInput] = useState("");
   const [submittingAnswerComment, setSubmittingAnswerComment] = useState(false);
+
+  const [editingAnswerId, setEditingAnswerId] = useState<number | null>(null);
+  const [editingAnswerText, setEditingAnswerText] = useState("");
+
+  const [editingAnswerCommentId, setEditingAnswerCommentId] = useState<number | null>(null);
+  const [editingAnswerCommentText, setEditingAnswerCommentText] = useState("");
+
+  const handleQuestionDelete = async () => {
+    if (!question) return;
+    if (!window.confirm("정말로 이 질문을 삭제하시겠습니까?")) return;
+    try {
+      await questionService.deleteQuestion(question.id);
+      alert("질문이 삭제되었습니다.");
+      navigate("/qna");
+    } catch (err) {
+      console.error("Failed to delete question:", err);
+      alert("질문 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleAnswerEditStart = (answerId: number, content: string) => {
+    setEditingAnswerId(answerId);
+    setEditingAnswerText(content);
+  };
+
+  const handleAnswerEditSave = async (answerId: number) => {
+    if (!editingAnswerText.trim()) return;
+    try {
+      await questionService.updateAnswer(answerId, editingAnswerText);
+      setEditingAnswerId(null);
+      setEditingAnswerText("");
+      const updated = await questionService.getQuestionDetail(Number(questionId));
+      setRawQuestion(updated);
+    } catch (err) {
+      console.error("Failed to edit answer:", err);
+      alert("답변 수정에 실패했습니다.");
+    }
+  };
+
+  const handleAnswerDelete = async (answerId: number) => {
+    if (!window.confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
+    try {
+      await questionService.deleteAnswer(answerId);
+      const updated = await questionService.getQuestionDetail(Number(questionId));
+      setRawQuestion(updated);
+    } catch (err) {
+      console.error("Failed to delete answer:", err);
+      alert("답변 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleAnswerCommentEditStart = (commentId: number, content: string) => {
+    setEditingAnswerCommentId(commentId);
+    setEditingAnswerCommentText(content);
+  };
+
+  const handleAnswerCommentEditSave = async (answerId: number, commentId: number) => {
+    if (!editingAnswerCommentText.trim()) return;
+    try {
+      await questionService.updateAnswerComment(commentId, editingAnswerCommentText);
+      setEditingAnswerCommentId(null);
+      setEditingAnswerCommentText("");
+      const data = await questionService.getAnswerComments(answerId);
+      setActiveAnswerComments(data);
+    } catch (err) {
+      console.error("Failed to edit answer comment:", err);
+      alert("댓글 수정에 실패했습니다.");
+    }
+  };
+
+  const handleAnswerCommentDelete = async (answerId: number, commentId: number) => {
+    if (!window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) return;
+    try {
+      await questionService.deleteAnswerComment(commentId);
+      const data = await questionService.getAnswerComments(answerId);
+      setActiveAnswerComments(data);
+    } catch (err) {
+      console.error("Failed to delete answer comment:", err);
+      alert("댓글 삭제에 실패했습니다.");
+    }
+  };
 
   const handleToggleComments = async (answerId: number) => {
     if (activeAnswerId === answerId) {
@@ -257,6 +338,12 @@ export function QnADetailPage() {
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
               <Share2 className="w-4 h-4" />
             </motion.button>
+            {currentUser && question && currentUser.id === question.authorId && (
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleQuestionDelete}
+                className="p-2 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer">
+                <Trash2 className="w-4 h-4" />
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -336,16 +423,44 @@ export function QnADetailPage() {
                   )}
                   <div className="p-6">
                     {/* Answer meta */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white text-xs font-bold">{answer.author[0]}</div>
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">{answer.author}</div>
-                        <div className="text-xs text-gray-400">{answer.date}</div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white text-xs font-bold">{answer.author[0]}</div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{answer.author}</div>
+                          <div className="text-xs text-gray-400">{answer.date}</div>
+                        </div>
                       </div>
+                      {currentUser && currentUser.id === answer.authorId && (
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          {editingAnswerId === answer.id ? (
+                            <>
+                              <button onClick={() => handleAnswerEditSave(answer.id)} className="hover:text-indigo-600 font-medium cursor-pointer">저장</button>
+                              <span>·</span>
+                              <button onClick={() => { setEditingAnswerId(null); setEditingAnswerText(""); }} className="hover:text-gray-600 font-medium cursor-pointer">취소</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => handleAnswerEditStart(answer.id, answer.content)} className="hover:text-indigo-600 font-medium cursor-pointer">수정</button>
+                              <span>·</span>
+                              <button onClick={() => handleAnswerDelete(answer.id)} className="hover:text-red-500 font-medium cursor-pointer">삭제</button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Answer content */}
-                    <div className="prose-sm" dangerouslySetInnerHTML={{ __html: renderContent(answer.content) }} />
+                    {editingAnswerId === answer.id ? (
+                      <textarea
+                        rows={4}
+                        value={editingAnswerText}
+                        onChange={(e) => setEditingAnswerText(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none bg-white mb-2"
+                      />
+                    ) : (
+                      <div className="prose-sm" dangerouslySetInnerHTML={{ __html: renderContent(answer.content) }} />
+                    )}
 
                     {/* Answer actions */}
                     <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
@@ -424,11 +539,39 @@ export function QnADetailPage() {
                                   {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
                                 </div>
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="text-xs font-medium text-gray-800">{comment.authorName}</span>
-                                    <span className="text-[10px] text-gray-400">{comment.date}</span>
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-xs font-medium text-gray-800">{comment.authorName}</span>
+                                      <span className="text-[10px] text-gray-400">{comment.date}</span>
+                                    </div>
+                                    {currentUser && currentUser.id === comment.authorId && (
+                                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                        {editingAnswerCommentId === comment.id ? (
+                                          <>
+                                            <button onClick={() => handleAnswerCommentEditSave(answer.id, comment.id)} className="hover:text-indigo-600 font-medium cursor-pointer">저장</button>
+                                            <span>·</span>
+                                            <button onClick={() => { setEditingAnswerCommentId(null); setEditingAnswerCommentText(""); }} className="hover:text-gray-600 font-medium cursor-pointer">취소</button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <button onClick={() => handleAnswerCommentEditStart(comment.id, comment.content)} className="hover:text-indigo-600 font-medium cursor-pointer">수정</button>
+                                            <span>·</span>
+                                            <button onClick={() => handleAnswerCommentDelete(answer.id, comment.id)} className="hover:text-red-500 font-medium cursor-pointer">삭제</button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
-                                  <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+                                  {editingAnswerCommentId === comment.id ? (
+                                    <input
+                                      type="text"
+                                      value={editingAnswerCommentText}
+                                      onChange={(e) => setEditingAnswerCommentText(e.target.value)}
+                                      className="w-full border border-gray-200 rounded px-2 py-0.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 bg-white mt-1"
+                                    />
+                                  ) : (
+                                    <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+                                  )}
                                 </div>
                               </div>
                             ))}

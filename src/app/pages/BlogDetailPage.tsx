@@ -1,10 +1,11 @@
 import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmark, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Heart, MessageSquare, Share2, Bookmark, Loader2, Trash2 } from "lucide-react";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { useEffect, useState } from "react";
 import { blogService } from "../services/blogService";
 import { authService } from "../services/authService";
+import { userService } from "../services/userService";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { BlogPostResponse, BlogPostDetailResponse, CommentResponse } from "../services/types";
@@ -109,9 +110,56 @@ export function BlogDetailPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState<BlogPostResponse[]>([]);
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [commentInput, setCommentInput] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+
+  const handleCommentEditStart = (commentId: number, content: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(content);
+  };
+
+  const handleCommentEditSave = async (commentId: number) => {
+    if (!editingCommentText.trim()) return;
+    try {
+      await blogService.updateComment(commentId, editingCommentText);
+      setEditingCommentId(null);
+      setEditingCommentText("");
+      await fetchComments();
+    } catch (err) {
+      console.error("Failed to edit comment:", err);
+      alert("댓글 수정에 실패했습니다.");
+    }
+  };
+
+  const handleCommentDelete = async (commentId: number) => {
+    if (!window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) return;
+    try {
+      await blogService.deleteComment(commentId);
+      await fetchComments();
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      alert("댓글 삭제에 실패했습니다.");
+    }
+  };
+
+  const handlePostDelete = async () => {
+    if (!post) return;
+    if (!window.confirm("정말로 이 포스트를 삭제하시겠습니까?")) return;
+    try {
+      await blogService.deleteBlog(post.id);
+      alert("포스트가 삭제되었습니다.");
+      navigate("/blog");
+    } catch (err) {
+      console.error("Failed to delete blog post:", err);
+      alert("포스트 삭제에 실패했습니다.");
+    }
+  };
 
   const fetchComments = async () => {
     if (!blogId) return;
@@ -142,6 +190,18 @@ export function BlogDetailPage() {
       setSubmittingComment(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await userService.getMe();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Failed to get current user:", err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -221,6 +281,12 @@ export function BlogDetailPage() {
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
               <Share2 className="w-4 h-4" />
             </motion.button>
+            {currentUser && currentUser.id === post.authorId && (
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handlePostDelete}
+                className="p-2 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer">
+                <Trash2 className="w-4 h-4" />
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -323,18 +389,46 @@ export function BlogDetailPage() {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-900">
-                            {comment.authorName}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {comment.date}
-                          </span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {comment.authorName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {comment.date}
+                            </span>
+                          </div>
+                          {currentUser && currentUser.id === comment.authorId && (
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                              {editingCommentId === comment.id ? (
+                                <>
+                                  <button onClick={() => handleCommentEditSave(comment.id)} className="hover:text-indigo-600 font-medium cursor-pointer">저장</button>
+                                  <span>·</span>
+                                  <button onClick={() => { setEditingCommentId(null); setEditingCommentText(""); }} className="hover:text-gray-600 font-medium cursor-pointer">취소</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button onClick={() => handleCommentEditStart(comment.id, comment.content)} className="hover:text-indigo-600 font-medium cursor-pointer">수정</button>
+                                  <span>·</span>
+                                  <button onClick={() => handleCommentDelete(comment.id)} className="hover:text-red-500 font-medium cursor-pointer">삭제</button>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          {comment.content}
-                        </p>
+                        {editingCommentId === comment.id ? (
+                          <textarea
+                            rows={2}
+                            value={editingCommentText}
+                            onChange={(e) => setEditingCommentText(e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none mt-1 bg-white"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {comment.content}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </motion.div>

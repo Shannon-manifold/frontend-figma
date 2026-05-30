@@ -57,5 +57,18 @@ export const proofService = {
       method: 'POST',
       body: JSON.stringify({ content }),
     });
+  },
+
+  async updateComment(commentId: number, content: string): Promise<CommentResponse> {
+    return fetcher<CommentResponse>(`/api/proofs/comments/${commentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  async deleteComment(commentId: number): Promise<void> {
+    await fetcher(`/api/proofs/comments/${commentId}`, {
+      method: 'DELETE',
+    });
   }
 };
