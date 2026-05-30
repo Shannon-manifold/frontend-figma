@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { motion } from 'motion/react';
+// @ts-ignore
+import confetti from 'canvas-confetti';
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,7 +13,11 @@ import {
   BookOpen,
   Home,
   CheckCircle,
-  Loader2
+  Loader2,
+  Trophy,
+  Sparkles,
+  ArrowRight,
+  RotateCcw
 } from 'lucide-react';
 import { tutorialService } from '../services/tutorialService';
 import { TutorialDetailResponse } from '../services/types';
@@ -26,6 +32,40 @@ export function TutorialDetailPage() {
   const [showHint, setShowHint] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+
+  const triggerConfetti = () => {
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981']
+      });
+      
+      setTimeout(() => {
+        confetti({
+          particleCount: 60,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0, y: 0.8 },
+          colors: ['#a855f7', '#ec4899']
+        });
+      }, 200);
+
+      setTimeout(() => {
+        confetti({
+          particleCount: 60,
+          angle: 120,
+          spread: 60,
+          origin: { x: 1, y: 0.8 },
+          colors: ['#6366f1', '#3b82f6']
+        });
+      }, 350);
+    } catch (e) {
+      console.error('Confetti animation failed:', e);
+    }
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -65,6 +105,13 @@ export function TutorialDetailPage() {
       if (result && result.verified) {
         setIsCorrect(true);
         await tutorialService.completeStep(Number(tutorialId), step.id);
+        
+        if (tutorial?.steps && currentStep === tutorial.steps.length - 1) {
+          setTimeout(() => {
+            setShowCompleteModal(true);
+            triggerConfetti();
+          }, 500);
+        }
       } else {
         setIsCorrect(false);
         setErrorMessage(result?.output || 'Lean 검증에 실패했습니다. 코드를 다시 확인해주세요.');
@@ -269,18 +316,130 @@ export function TutorialDetailPage() {
                 {completing ? '검증 중...' : '실행하기'}
               </button>
 
-              <button
-                onClick={nextStep}
-                disabled={currentStep === tutorial.steps.length - 1 || !isCorrect}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg transition flex items-center gap-2"
-              >
-                다음
-                <ChevronRight className="w-5 h-5" />
-              </button>
+              {currentStep === tutorial.steps.length - 1 ? (
+                <button
+                  onClick={() => {
+                    setShowCompleteModal(true);
+                    triggerConfetti();
+                  }}
+                  disabled={!isCorrect}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white rounded-lg transition-all duration-300 font-semibold flex items-center gap-2 shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 active:scale-95 disabled:scale-100 disabled:shadow-none"
+                >
+                  완료 🎉
+                </button>
+              ) : (
+                <button
+                  onClick={nextStep}
+                  disabled={!isCorrect}
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg transition flex items-center gap-2"
+                >
+                  다음
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Complete Celebration Modal */}
+      {showCompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setShowCompleteModal(false)}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+
+          {/* Modal Container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="relative max-w-md w-full bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700/70 rounded-2xl shadow-2xl p-8 overflow-hidden text-center z-10"
+          >
+            {/* Glowing background light */}
+            <div className="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Icon Banner */}
+            <div className="relative flex justify-center mb-6">
+              {/* Confetti Background Sparkles */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 w-24 h-24 m-auto flex items-center justify-center text-indigo-500/30"
+              >
+                <Sparkles className="w-16 h-16 absolute -top-2 -left-2 animate-pulse" />
+                <Sparkles className="w-12 h-12 absolute -bottom-2 -right-2 animate-pulse" />
+              </motion.div>
+
+              {/* Main Trophy */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.15, type: 'spring', stiffness: 200 }}
+                className="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-yellow-200/50"
+              >
+                <Trophy className="w-10 h-10 text-gray-900" />
+              </motion.div>
+            </div>
+
+            {/* Title & Description */}
+            <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">
+              🎉 튜토리얼 완료!
+            </h2>
+            <p className="text-indigo-400 font-semibold text-sm mb-4">
+              {tutorial.title}
+            </p>
+            
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+              모든 증명을 완수하고 Lean 4의 수학적 검증을 통과하셨습니다! <br />
+              증명의 개념과 규칙을 훌륭히 마스터하셨습니다.
+            </p>
+
+            {/* Statistics */}
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 mb-6 flex items-center justify-around">
+              <div>
+                <div className="text-2xl font-bold text-green-400">
+                  {tutorial.steps.length}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">완료한 단계 수</div>
+              </div>
+              <div className="w-px h-8 bg-gray-800" />
+              <div>
+                <div className="text-2xl font-bold text-indigo-400">100%</div>
+                <div className="text-xs text-gray-500 mt-1">진행률</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/tutorials"
+                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"
+              >
+                튜토리얼 목록으로 돌아가기
+                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              
+              <button
+                onClick={() => {
+                  setCurrentStep(0);
+                  setIsCorrect(null);
+                  setShowCompleteModal(false);
+                }}
+                className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl border border-gray-700 transition flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                다시 풀어보기
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
