@@ -24,9 +24,18 @@ export function TutorialsPage() {
   }, []);
 
   const levelStyle = {
+    'Beginner': 'bg-green-50 text-green-700 border-green-200',
+    'Intermediate': 'bg-blue-50 text-blue-700 border-blue-200',
+    'Advanced': 'bg-purple-50 text-purple-700 border-purple-200',
     '입문': 'bg-green-50 text-green-700 border-green-200',
     '중급': 'bg-blue-50 text-blue-700 border-blue-200',
     '고급': 'bg-purple-50 text-purple-700 border-purple-200',
+  };
+
+  const levelLabel: { [key: string]: string } = {
+    'Beginner': '입문',
+    'Intermediate': '중급',
+    'Advanced': '고급',
   };
 
   const benefits = [
@@ -72,7 +81,7 @@ export function TutorialsPage() {
                       <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
                         <span className="text-3xl font-serif text-gray-300">{tutorial.icon || 'Σ'}</span>
                         <span className={`px-2.5 py-1 rounded border text-xs font-medium ${levelStyle[tutorial.level as keyof typeof levelStyle] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
-                          {tutorial.level}
+                          {levelLabel[tutorial.level] || tutorial.level}
                         </span>
                       </div>
 
