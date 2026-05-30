@@ -7,6 +7,7 @@ import { BlogDetailPage } from "./pages/BlogDetailPage";
 import { TutorialsPage } from "./pages/TutorialsPage";
 import { TutorialDetailPage } from "./pages/TutorialDetailPage";
 import { QnAPage } from "./pages/QnAPage";
+import { QnAWritePage } from "./pages/QnAWritePage";
 import { QnADetailPage } from "./pages/QnADetailPage";
 import { ProofsPage } from "./pages/ProofsPage";
 import { ProofDetailPage } from "./pages/ProofDetailPage";
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "blog/:blogId", Component: BlogDetailPage },
       { path: "tutorials", Component: TutorialsPage },
       { path: "qna", Component: QnAPage },
+      { path: "qna/write", Component: QnAWritePage },
       { path: "qna/:questionId", Component: QnADetailPage },
       { path: "proofs", Component: ProofsPage },
       { path: "proofs/:proofId", Component: ProofDetailPage },

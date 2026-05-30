@@ -108,13 +108,15 @@ export function QnAPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-1">커뮤니티 질문</h2>
               <p className="text-sm text-gray-500">증명 보조기 사용 중 궁금한 점을 함께 해결해요</p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 transition-colors font-medium"
-            >
-              질문하기
-            </motion.button>
+            <Link to="/qna/write">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 transition-colors font-medium"
+              >
+                질문하기
+              </motion.button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
