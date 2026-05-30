@@ -14,6 +14,13 @@ export const tutorialService = {
     return fetcher('/api/users/me/tutorials/progress');
   },
 
+  async verifyStep(tutorialId: number, stepId: number, code: string): Promise<{ success: boolean; message?: string }> {
+    return fetcher<{ success: boolean; message?: string }>(`/api/tutorials/${tutorialId}/steps/${stepId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
+
   async completeStep(tutorialId: number, stepId: number): Promise<void> {
     await fetcher(`/api/tutorials/${tutorialId}/steps/${stepId}/complete`, {
       method: 'POST',

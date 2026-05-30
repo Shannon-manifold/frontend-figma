@@ -25,6 +25,7 @@ export function TutorialDetailPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -48,6 +49,7 @@ export function TutorialDetailPage() {
     if (step) {
       setUserCode(step.starterCode || '');
       setIsCorrect(null);
+      setErrorMessage('');
       setShowHint(false);
     }
   }, [currentStep, step]);
@@ -55,21 +57,24 @@ export function TutorialDetailPage() {
   const checkCode = async () => {
     if (!step || !tutorialId) return;
     
-    const normalized = userCode.trim().replace(/\s+/g, ' ');
-    const solutionNormalized = (step.solution || '').trim().replace(/\s+/g, ' ');
-
-    if (normalized === solutionNormalized || !normalized.includes('sorry')) {
-      setIsCorrect(true);
-      setCompleting(true);
-      try {
+    setCompleting(true);
+    setErrorMessage('');
+    setIsCorrect(null);
+    try {
+      const result = await tutorialService.verifyStep(Number(tutorialId), step.id, userCode);
+      if (result && result.success) {
+        setIsCorrect(true);
         await tutorialService.completeStep(Number(tutorialId), step.id);
-      } catch (err) {
-        console.error('Failed to complete step:', err);
-      } finally {
-        setCompleting(false);
+      } else {
+        setIsCorrect(false);
+        setErrorMessage(result?.message || 'Lean 검증에 실패했습니다. 코드를 다시 확인해주세요.');
       }
-    } else {
+    } catch (err: any) {
+      console.error('Failed to verify step:', err);
       setIsCorrect(false);
+      setErrorMessage(err.message || '검증 서버와의 통신 중 오류가 발생했습니다.');
+    } finally {
+      setCompleting(false);
     }
   };
 
@@ -219,7 +224,7 @@ export function TutorialDetailPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${
+                className={`mb-4 p-4 rounded-lg flex items-start gap-3 ${
                   isCorrect
                     ? 'bg-green-900/30 border border-green-700'
                     : 'bg-red-900/30 border border-red-700'
@@ -227,7 +232,7 @@ export function TutorialDetailPage() {
               >
                 {isCorrect ? (
                   <>
-                    <Check className="w-5 h-5 text-green-500" />
+                    <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-green-400 font-semibold">정답입니다! 🎉</p>
                       <p className="text-sm text-green-300">다음 단계로 진행하세요</p>
@@ -235,10 +240,10 @@ export function TutorialDetailPage() {
                   </>
                 ) : (
                   <>
-                    <X className="w-5 h-5 text-red-500" />
+                    <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-red-400 font-semibold">다시 시도해보세요</p>
-                      <p className="text-sm text-red-300">증명이 완전하지 않습니다</p>
+                      <p className="text-sm text-red-300 whitespace-pre-wrap font-mono mt-1 bg-black/20 p-2 rounded border border-red-900/30">{errorMessage || '증명이 완전하지 않습니다'}</p>
                     </div>
                   </>
                 )}
@@ -257,10 +262,11 @@ export function TutorialDetailPage() {
 
               <button
                 onClick={checkCode}
-                className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition font-semibold flex items-center justify-center gap-2"
+                disabled={completing}
+                className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Play className="w-5 h-5" />
-                실행하기
+                {completing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                {completing ? '검증 중...' : '실행하기'}
               </button>
 
               <button
