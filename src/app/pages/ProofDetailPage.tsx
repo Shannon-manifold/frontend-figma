@@ -15,6 +15,9 @@ import {
   ChevronUp,
   User,
   Loader2,
+  Edit3,
+  Save,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
@@ -256,6 +259,17 @@ export function ProofDetailPage() {
   const [copied, setCopied] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingProof, setEditingProof] = useState(false);
+  const [savingProof, setSavingProof] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editForm, setEditForm] = useState({
+    title: "",
+    field: "",
+    description: "",
+    language: "",
+    latex: "",
+    code: "",
+  });
 
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [commentInput, setCommentInput] = useState("");
@@ -294,6 +308,62 @@ export function ProofDetailPage() {
   };
 
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const startProofEdit = () => {
+    if (!proof) return;
+    setEditForm({
+      title: proof.title || "",
+      field: proof.field || "기타",
+      description: proof.description || "",
+      language: proof.language || "Lean 4",
+      latex: proof.latex || "",
+      code: proof.code || "",
+    });
+    setEditError("");
+    setEditingProof(true);
+  };
+
+  const cancelProofEdit = () => {
+    setEditingProof(false);
+    setEditError("");
+  };
+
+  const handleProofEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proof || savingProof) return;
+    if (!editForm.title.trim()) {
+      setEditError("정리 제목을 입력해 주세요.");
+      return;
+    }
+    if (!editForm.description.trim()) {
+      setEditError("설명을 입력해 주세요.");
+      return;
+    }
+    if (!editForm.latex.trim()) {
+      setEditError("증명 내용을 입력해 주세요.");
+      return;
+    }
+
+    setSavingProof(true);
+    setEditError("");
+    try {
+      const updated = await proofService.updateProof(proof.id, {
+        title: editForm.title,
+        field: editForm.field,
+        description: editForm.description,
+        language: editForm.language,
+        latex: editForm.latex,
+        code: editForm.code,
+      });
+      setProof(updated);
+      setEditingProof(false);
+    } catch (error: any) {
+      console.error("Failed to update proof:", error);
+      setEditError(error.message || "증명 수정에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setSavingProof(false);
+    }
+  };
 
   const fetchComments = async () => {
     if (!proofId) return;
@@ -427,7 +497,11 @@ export function ProofDetailPage() {
     );
   }
 
-  const isProver = currentUser && proof && (currentUser.id === proof.proverId);
+  const proofAuthorName = proof.prover || proof.proverName;
+  const isProver = !!(currentUser && proof && (
+    String(currentUser.id) === String(proof.proverId ?? "") ||
+    currentUser.name === proofAuthorName
+  ));
   const config = statusConfig[proof.status as keyof typeof statusConfig] || statusConfig.pending;
   const StatusIcon = config.icon;
   const renderedHtml = processLatexToHtml(proof.latex);
@@ -451,6 +525,17 @@ export function ProofDetailPage() {
             증명 목록
           </Link>
           <div className="flex items-center gap-2">
+            {isProver && !editingProof && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startProofEdit}
+                className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                title="증명 수정"
+              >
+                <Edit3 className="w-4 h-4" />
+              </motion.button>
+            )}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -486,154 +571,297 @@ export function ProofDetailPage() {
           >
             {/* Header */}
             <div className="bg-white rounded-xl border border-gray-200 p-8 mb-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
-                      {proof.field}
-                    </span>
-                    <div
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${config.bg} ${config.color}`}
+              {editingProof ? (
+                <form onSubmit={handleProofEditSubmit} className="space-y-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900 mb-1">
+                        증명 수정
+                      </h1>
+                      <p className="text-sm text-gray-500">
+                        제목, 설명, 증명 본문, 소스 코드를 수정할 수 있습니다.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={cancelProofEdit}
+                      className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                     >
-                      <StatusIcon className="w-3.5 h-3.5" />
-                      {config.label}
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {editError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                      {editError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                        분야
+                      </label>
+                      <select
+                        value={editForm.field}
+                        onChange={(e) => setEditForm({ ...editForm, field: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                      >
+                        <option value="정수론">정수론</option>
+                        <option value="해석학">해석학</option>
+                        <option value="대수학">대수학</option>
+                        <option value="기하학">기하학</option>
+                        <option value="조합론">조합론</option>
+                        <option value="기타">기타</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                        증명 언어
+                      </label>
+                      <select
+                        value={editForm.language}
+                        onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                      >
+                        <option value="Lean 4">Lean 4</option>
+                        <option value="Coq">Coq</option>
+                        <option value="Isabelle">Isabelle</option>
+                        <option value="Agda">Agda</option>
+                        <option value="기타">기타</option>
+                      </select>
                     </div>
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {proof.title}
-                  </h1>
-                  <p className="text-gray-500 leading-relaxed">
-                    {proof.description}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                    {(proof.prover || proof.proverName)?.[0] || '?'}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                      정리 제목
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                    />
                   </div>
-                  <span className="font-medium text-gray-700">
-                    {proof.prover || proof.proverName}
-                  </span>
-                </div>
-                <span>·</span>
-                <div className="flex items-center gap-1">
-                  <Code className="w-3.5 h-3.5" />
-                  {proof.language}
-                </div>
-                <span>·</span>
-                <span>{proof.date}</span>
-              </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                      한 줄 설명
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                      LaTeX & 마크다운 증명 내용
+                    </label>
+                    <textarea
+                      value={editForm.latex}
+                      onChange={(e) => setEditForm({ ...editForm, latex: e.target.value })}
+                      rows={12}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                      증명 소스 코드
+                    </label>
+                    <textarea
+                      value={editForm.code}
+                      onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
+                      rows={7}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={cancelProofEdit}
+                      disabled={savingProof}
+                      className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingProof}
+                      className="inline-flex items-center justify-center gap-1.5 min-w-[96px] px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                    >
+                      {savingProof ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          저장
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+                          {proof.field}
+                        </span>
+                        <div
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${config.bg} ${config.color}`}
+                        >
+                          <StatusIcon className="w-3.5 h-3.5" />
+                          {config.label}
+                        </div>
+                      </div>
+                      <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                        {proof.title}
+                      </h1>
+                      <p className="text-gray-500 leading-relaxed">
+                        {proof.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                        {(proof.prover || proof.proverName)?.[0] || '?'}
+                      </div>
+                      <span className="font-medium text-gray-700">
+                        {proof.prover || proof.proverName}
+                      </span>
+                    </div>
+                    <span>·</span>
+                    <div className="flex items-center gap-1">
+                      <Code className="w-3.5 h-3.5" />
+                      {proof.language}
+                    </div>
+                    <span>·</span>
+                    <span>{proof.date}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Verification Status Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className={`rounded-xl border p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${config.bg}`}
-            >
-              <div className="flex items-start gap-3">
-                <StatusIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`} />
-                <div>
-                  <div className={`font-semibold text-sm ${config.color}`}>
-                    {config.label}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-0.5">
-                    {config.description}
-                  </div>
-                </div>
-              </div>
-
-              {isProver && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleVerify}
-                  disabled={verifying}
-                  className="sm:flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
+            {!editingProof && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className={`rounded-xl border p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${config.bg}`}
                 >
-                  {verifying ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      검증 중...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      형식 검증 실행하기
-                    </>
+                  <div className="flex items-start gap-3">
+                    <StatusIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`} />
+                    <div>
+                      <div className={`font-semibold text-sm ${config.color}`}>
+                        {config.label}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-0.5">
+                        {config.description}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isProver && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleVerify}
+                      disabled={verifying}
+                      className="sm:flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
+                    >
+                      {verifying ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          검증 중...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          형식 검증 실행하기
+                        </>
+                      )}
+                    </motion.button>
                   )}
-                </motion.button>
-              )}
-            </motion.div>
+                </motion.div>
 
-            {/* LaTeX Proof */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6"
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 className="text-base font-semibold text-gray-900">
-                  증명 내용
-                </h2>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleCopyLatex}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                {/* LaTeX Proof */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6"
                 >
-                  <Copy className="w-3.5 h-3.5" />
-                  {copied ? "복사됨!" : "LaTeX 복사"}
-                </motion.button>
-              </div>
-              <div
-                ref={contentRef}
-                className="proof-content px-6 py-6 sm:px-8"
-                dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              />
-            </motion.div>
-
-            {/* Lean/Coq Code */}
-            {proof.code && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6"
-              >
-                <button
-                  onClick={() => setShowCode(!showCode)}
-                  className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Code className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-semibold text-gray-900">
-                      {proof.language} 코드
-                    </span>
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h2 className="text-base font-semibold text-gray-900">
+                      증명 내용
+                    </h2>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleCopyLatex}
+                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      {copied ? "복사됨!" : "LaTeX 복사"}
+                    </motion.button>
                   </div>
-                  {showCode ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  )}
-                </button>
-                {showCode && (
+                  <div
+                    ref={contentRef}
+                    className="proof-content px-6 py-6 sm:px-8"
+                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                  />
+                </motion.div>
+
+                {/* Lean/Coq Code */}
+                {proof.code && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="border-t border-gray-100"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6"
                   >
-                    <pre className="px-6 py-5 text-sm font-mono text-gray-200 bg-gray-900 overflow-x-auto leading-relaxed">
-                      {proof.code}
-                    </pre>
+                    <button
+                      onClick={() => setShowCode(!showCode)}
+                      className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-semibold text-gray-900">
+                          {proof.language} 코드
+                        </span>
+                      </div>
+                      {showCode ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                    {showCode && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="border-t border-gray-100"
+                      >
+                        <pre className="px-6 py-5 text-sm font-mono text-gray-200 bg-gray-900 overflow-x-auto leading-relaxed">
+                          {proof.code}
+                        </pre>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
-              </motion.div>
+              </>
             )}
 
             {/* Comments */}
@@ -819,7 +1047,17 @@ export function ProofDetailPage() {
               </dl>
 
               {isProver && (
-                <div className="border-t border-gray-100 pt-4 mt-4">
+                <div className="border-t border-gray-100 pt-4 mt-4 space-y-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={startProofEdit}
+                    disabled={editingProof || savingProof}
+                    className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    {editingProof ? "수정 중" : "증명 수정하기"}
+                  </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
