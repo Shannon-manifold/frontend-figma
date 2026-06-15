@@ -14,6 +14,7 @@ import { ProofDetailPage } from "./pages/ProofDetailPage";
 import { ContributorsPage } from "./pages/ContributorsPage";
 import { ContributorDetailPage } from "./pages/ContributorDetailPage";
 import { ChallengesPage } from "./pages/ChallengesPage";
+import { ChallengeWritePage } from "./pages/ChallengeWritePage";
 import { DocsPage } from "./pages/DocsPage";
 import { MyPage } from "./pages/MyPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
       { path: "contributors", Component: ContributorsPage },
       { path: "contributors/:contributorId", Component: ContributorDetailPage },
       { path: "challenges", Component: ChallengesPage },
+      { path: "challenges/write", Component: ChallengeWritePage },
       { path: "docs", Component: DocsPage },
       { path: "mypage", Component: MyPage },
       { path: "*", Component: NotFound },

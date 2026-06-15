@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { motion } from "motion/react";
 import {
   ArrowRight,
@@ -300,10 +301,13 @@ export function ChallengesPage() {
                 각 카드의 후원 풀은 상금으로 적립되며, 검증 절차를 통과한 해결자에게 지급됩니다.
               </p>
             </div>
-            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+            <Link
+              to="/challenges/write"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
+            >
               난제 등록하기
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

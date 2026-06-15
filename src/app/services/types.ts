@@ -201,6 +201,20 @@ export interface ChallengeResponse {
   accent: string;
 }
 
+export interface ChallengeCreateRequest {
+  title: string;
+  field: string;
+  description: string;
+  prize: string;
+  sponsorPool: string;
+  progress: number;
+  difficulty: 'Millennium' | 'Hard' | 'Medium';
+  proofSystem: string;
+  accent: string;
+  detailedDescription: string;
+  references?: { title: string; url: string }[];
+}
+
 export interface ChallengeDetailResponse {
   id: number;
   title: string;
