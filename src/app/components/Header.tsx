@@ -1,4 +1,4 @@
-import { Search, User, Menu, Sparkles } from 'lucide-react';
+import { User, Menu, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router';
 import { NotificationPanel } from './NotificationPanel';
@@ -50,15 +50,6 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="hidden sm:flex items-center gap-2 rounded px-3 py-1.5 border border-border bg-secondary text-sm">
-              <Search className="w-3.5 h-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="정리 검색..."
-                className="bg-transparent border-none outline-none text-sm w-40 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-
             <NotificationPanel />
             <ThemeToggle />
 
