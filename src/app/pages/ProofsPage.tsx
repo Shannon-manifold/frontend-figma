@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { TheoremCard } from "../components/TheoremCard";
 import { FilterBar } from "../components/FilterBar";
-import { Search, TrendingUp, Clock, Star, Loader2, Plus, X, Users, Eye, Edit2, FileText } from "lucide-react";
+import { TrendingUp, Clock, Star, Loader2, Plus, X, Users, Eye, Edit2, FileText } from "lucide-react";
 import { proofService } from "../services/proofService";
 import { authService } from "../services/authService";
 import { ProofResponse } from "../services/types";
@@ -226,23 +226,7 @@ export function ProofsPage() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-3xl font-bold text-gray-900 mb-2">검증된 증명</h1>
-            <p className="text-gray-500 mb-8">증명 보조기로 검증한 정리들을 탐색하고 배워보세요</p>
-
-            <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 max-w-2xl">
-              <Search className="w-5 h-5 text-gray-400 ml-1 flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="정리 이름, 분야, 증명자로 검색..."
-                className="flex-1 bg-transparent border-none outline-none text-gray-900 text-sm"
-              />
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 transition-colors font-medium"
-              >
-                검색
-              </motion.button>
-            </div>
+            <p className="text-gray-500">증명 보조기로 검증한 정리들을 탐색하고 배워보세요</p>
           </motion.div>
         </div>
       </section>

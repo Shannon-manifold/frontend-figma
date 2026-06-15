@@ -512,6 +512,28 @@ export function ProofDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      alert("링크가 복사되었습니다.");
+    } catch (error) {
+      console.error("Failed to copy link:", error);
+      alert("링크 복사에 실패했습니다.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
@@ -553,6 +575,7 @@ export function ProofDetailPage() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleShare}
               className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <Share2 className="w-4 h-4" />
